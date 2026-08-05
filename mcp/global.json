@@ -1,0 +1,68 @@
+{
+  "settings": {
+    "autoAuth": false,
+    "hostConfigDiscovery": "off",
+    "showStatusIcon": true,
+    "outputGuard": true
+  },
+  "mcpServers": {
+    "context7": {
+      "command": "npx",
+      "args": ["-y", "@upstash/context7-mcp@3.2.3", "--transport", "stdio"],
+      "lifecycle": "lazy",
+      "requestTimeoutMs": 60000,
+      "exposeResources": false
+    },
+    "playwright": {
+      "command": "npx",
+      "args": ["-y", "@playwright/mcp@0.0.78", "--headless", "--isolated", "--output-mode", "stdout"],
+      "lifecycle": "lazy",
+      "requestTimeoutMs": 90000,
+      "exposeResources": false
+    },
+    "semgrep": {
+      "command": "uvx",
+      "args": ["--from", "semgrep==1.135.0", "semgrep", "mcp", "--no-trace"],
+      "lifecycle": "lazy",
+      "requestTimeoutMs": 120000,
+      "exposeResources": false
+    },
+    "openalex": {
+      "command": "npx",
+      "args": ["-y", "openalex-research-mcp@0.5.0"],
+      "lifecycle": "lazy",
+      "requestTimeoutMs": 60000,
+      "exposeResources": false
+    },
+    "arxiv": {
+      "command": "uvx",
+      "args": ["--from", "arxiv-mcp-server==0.5.0", "arxiv-mcp-server"],
+      "lifecycle": "lazy",
+      "requestTimeoutMs": 90000,
+      "exposeResources": false
+    },
+    "zotero": {
+      "command": "uvx",
+      "args": ["--from", "zotero-mcp-server==0.1.6", "zotero-mcp", "serve", "--transport", "stdio"],
+      "env": {
+        "ZOTERO_LOCAL": "true",
+        "ZOTERO_NO_CLAUDE": "true"
+      },
+      "lifecycle": "lazy",
+      "requestTimeoutMs": 60000,
+      "exposeResources": false,
+      "excludeTools": [
+        "zotero_create_note",
+        "zotero_create_annotation",
+        "zotero_batch_update_tags",
+        "zotero_create_collection",
+        "zotero_manage_collections",
+        "zotero_add_by_doi",
+        "zotero_add_by_url",
+        "zotero_update_item",
+        "zotero_merge_duplicates",
+        "zotero_add_from_file"
+      ]
+    }
+  }
+}

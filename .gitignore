@@ -1,0 +1,23 @@
+node_modules/
+*.tgz
+*.log
+.DS_Store
+coverage/
+dist/
+.tmp/
+.env
+.env.*
+!.env.example
+
+# Never commit Pi runtime state or credentials.
+auth.json
+secrets/
+sessions/
+trust.json
+mcp-cache.json
+models-store.json
+data/
+backups/
+
+# Local publish artifacts.
+npm-debug.log*

@@ -1,0 +1,95 @@
+{
+  "name": "yimo-pi-kit",
+  "version": "0.1.0",
+  "description": "A portable Pi coding-agent profile with extensions, subagents, skills, prompts, themes, and optional MCP integration.",
+  "type": "module",
+  "license": "MIT",
+  "author": "yimo",
+  "keywords": [
+    "pi-package",
+    "pi",
+    "coding-agent",
+    "subagents",
+    "agent-skills",
+    "mcp"
+  ],
+  "engines": {
+    "node": ">=22.19.0"
+  },
+  "files": [
+    "agents",
+    "docs",
+    "examples",
+    "extensions",
+    "mcp",
+    "prompts",
+    "scripts",
+    "skills",
+    "themes",
+    "LICENSE",
+    "README.md",
+    "SECURITY.md",
+    "THIRD_PARTY_NOTICES.md"
+  ],
+  "bin": {
+    "yimo-pi-kit": "./scripts/cli.mjs"
+  },
+  "scripts": {
+    "check": "npm run typecheck && node ./scripts/check.mjs",
+    "audit:prod": "npm audit --omit=dev",
+    "release:check": "npm run check && npm run audit:prod && npm pack --dry-run",
+    "typecheck": "tsc --noEmit",
+    "doctor": "node ./scripts/cli.mjs doctor",
+    "setup:mcp": "node ./scripts/cli.mjs setup-mcp",
+    "pack:dry-run": "npm pack --dry-run"
+  },
+  "dependencies": {
+    "strip-json-comments": "5.0.3"
+  },
+  "devDependencies": {
+    "@earendil-works/pi-ai": "0.83.0",
+    "@earendil-works/pi-agent-core": "0.83.0",
+    "@earendil-works/pi-coding-agent": "0.83.0",
+    "@earendil-works/pi-tui": "0.83.0",
+    "@types/node": "^22.0.0",
+    "typebox": "1.3.7",
+    "typescript": "^5.9.0"
+  },
+  "peerDependencies": {
+    "@earendil-works/pi-ai": "*",
+    "@earendil-works/pi-agent-core": "*",
+    "@earendil-works/pi-coding-agent": ">=0.83.0",
+    "@earendil-works/pi-tui": "*",
+    "typebox": "*"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "pi": {
+    "extensions": [
+      "./extensions/00-safe-temp/index.ts",
+      "./extensions/api-key-failover/index.ts",
+      "./extensions/auto-context/index.ts",
+      "./extensions/confirm-destructive/index.ts",
+      "./extensions/custom-compaction/index.ts",
+      "./extensions/dirty-repo-guard/index.ts",
+      "./extensions/git-checkpoint/index.ts",
+      "./extensions/kit-manager/index.ts",
+      "./extensions/latex-render/index.ts",
+      "./extensions/subagent/index.ts",
+      "./extensions/summarize/index.ts",
+      "./extensions/task-notifier/index.ts",
+      "./extensions/todo/index.ts",
+      "./extensions/worklog.ts"
+    ],
+    "skills": [
+      "./skills"
+    ],
+    "prompts": [
+      "./prompts"
+    ],
+    "themes": [
+      "./themes"
+    ]
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "settings": { "showStatusIcon": false, "outputGuard": true },
+  "mcpServers": {
+    "context7": {
+      "command": "npx",
+      "args": ["-y", "@upstash/context7-mcp@3.2.3", "--transport", "stdio"],
+      "lifecycle": "lazy",
+      "requestTimeoutMs": 60000,
+      "exposeResources": false
+    },
+    "semgrep": {
+      "command": "uvx",
+      "args": ["--from", "semgrep==1.135.0", "semgrep", "mcp", "--no-trace"],
+      "lifecycle": "lazy",
+      "requestTimeoutMs": 120000,
+      "exposeResources": false
+    }
+  }
+}

@@ -1,0 +1,126 @@
+{
+  "sources": {
+    "academic-research-skills": {
+      "url": "https://github.com/Imbad0202/academic-research-skills.git",
+      "ref": "73c898c842afae3f163ac571dfa098c72d7c82af",
+      "paths": [
+        "academic-paper",
+        "academic-paper-reviewer",
+        "academic-pipeline",
+        "deep-research"
+      ]
+    },
+    "anthropic-skills": {
+      "url": "https://github.com/anthropics/skills.git",
+      "ref": "9d2f1ae187231d8199c64b5b762e1bdf2244733d",
+      "paths": [
+        "skills/frontend-design",
+        "skills/webapp-testing"
+      ]
+    },
+    "context7": {
+      "url": "https://github.com/upstash/context7.git",
+      "ref": "a9d7c77f5e4c93c1c875b109d6d057487f2dc437",
+      "paths": [
+        "packages/pi/skills/context7-docs"
+      ]
+    },
+    "microsoft-skills": {
+      "url": "https://github.com/microsoft/skills.git",
+      "ref": "c33193b1b2dd14d5946e3c6213fd095ffa5b31df",
+      "paths": [
+        ".github/skills/cloud-solution-architect",
+        ".github/skills/frontend-design-review"
+      ]
+    },
+    "openalex-research-mcp": {
+      "url": "https://github.com/oksure/openalex-research-mcp.git",
+      "ref": "29294c31184f0cd5e4a42ec79d69354d00ba2bcb",
+      "paths": [
+        "skill"
+      ]
+    },
+    "supabase-agent-skills": {
+      "url": "https://github.com/supabase/agent-skills.git",
+      "ref": "1ad9aaeb49caafd9e95c0a91116f71890eebbc53",
+      "paths": [
+        "skills/supabase-postgres-best-practices"
+      ]
+    },
+    "vercel-agent-skills": {
+      "url": "https://github.com/vercel-labs/agent-skills.git",
+      "ref": "f8a72b9603728bb92a217a879b7e62e43ad76c81",
+      "paths": [
+        "skills/composition-patterns",
+        "skills/react-best-practices"
+      ]
+    }
+  },
+  "skills": {
+    "academic-paper": {
+      "source": "academic-research-skills",
+      "path": "academic-paper",
+      "profiles": ["academic", "all"]
+    },
+    "academic-paper-reviewer": {
+      "source": "academic-research-skills",
+      "path": "academic-paper-reviewer",
+      "profiles": ["academic", "all"]
+    },
+    "academic-pipeline": {
+      "source": "academic-research-skills",
+      "path": "academic-pipeline",
+      "profiles": ["academic", "all"]
+    },
+    "cloud-solution-architect": {
+      "source": "microsoft-skills",
+      "path": ".github/skills/cloud-solution-architect",
+      "profiles": ["architecture", "all"]
+    },
+    "context7-docs": {
+      "source": "context7",
+      "path": "packages/pi/skills/context7-docs",
+      "profiles": ["backend", "frontend", "architecture", "security", "all"]
+    },
+    "deep-research": {
+      "source": "academic-research-skills",
+      "path": "deep-research",
+      "profiles": ["academic", "all"]
+    },
+    "frontend-design": {
+      "source": "anthropic-skills",
+      "path": "skills/frontend-design",
+      "profiles": ["frontend", "all"]
+    },
+    "frontend-design-review": {
+      "source": "microsoft-skills",
+      "path": ".github/skills/frontend-design-review",
+      "profiles": ["frontend", "all"]
+    },
+    "openalex-research": {
+      "source": "openalex-research-mcp",
+      "path": "skill",
+      "profiles": ["academic", "all"]
+    },
+    "supabase-postgres-best-practices": {
+      "source": "supabase-agent-skills",
+      "path": "skills/supabase-postgres-best-practices",
+      "profiles": ["backend", "all"]
+    },
+    "vercel-composition-patterns": {
+      "source": "vercel-agent-skills",
+      "path": "skills/composition-patterns",
+      "profiles": ["frontend", "all"]
+    },
+    "vercel-react-best-practices": {
+      "source": "vercel-agent-skills",
+      "path": "skills/react-best-practices",
+      "profiles": ["frontend", "all"]
+    },
+    "webapp-testing": {
+      "source": "anthropic-skills",
+      "path": "skills/webapp-testing",
+      "profiles": ["frontend", "all"]
+    }
+  }
+}

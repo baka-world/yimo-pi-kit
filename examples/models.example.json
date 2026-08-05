@@ -1,0 +1,33 @@
+{
+  "providers": {
+    "team-gateway": {
+      "baseUrl": "https://gateway.example.com/v1",
+      "api": "openai-completions-key-failover",
+      "apiKey": "$YIMO_PI_GATEWAY_KEY_1",
+      "apiKeys": [
+        "$YIMO_PI_GATEWAY_KEY_1",
+        "$YIMO_PI_GATEWAY_KEY_2"
+      ],
+      "failover": {
+        "timeoutMs": 120000,
+        "maxAttempts": 2
+      },
+      "models": [
+        {
+          "id": "your-model-id",
+          "name": "Team Gateway Model",
+          "reasoning": true,
+          "input": ["text", "image"],
+          "contextWindow": 128000,
+          "maxTokens": 16384,
+          "cost": {
+            "input": 0,
+            "output": 0,
+            "cacheRead": 0,
+            "cacheWrite": 0
+          }
+        }
+      ]
+    }
+  }
+}
