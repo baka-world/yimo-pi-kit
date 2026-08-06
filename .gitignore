@@ -5,6 +5,8 @@ node_modules/
 coverage/
 dist/
 .tmp/
+__pycache__/
+*.py[cod]
 .env
 .env.*
 !.env.example
@@ -17,6 +19,7 @@ trust.json
 mcp-cache.json
 models-store.json
 state/
+.code-review-graph/
 data/
 backups/
 

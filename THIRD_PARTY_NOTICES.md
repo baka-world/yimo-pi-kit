@@ -60,6 +60,7 @@ The adapter is not copied into this repository. Install it separately as a Pi pa
 | <https://github.com/Imbad0202/academic-research-skills> | academic-paper, reviewer, pipeline, deep-research | **CC BY-NC 4.0**; attribution and non-commercial restriction apply |
 | <https://github.com/anthropics/skills> | frontend-design, webapp-testing | Apache License 2.0 in each selected skill directory |
 | <https://github.com/upstash/context7> | context7-docs | MIT |
+| <https://github.com/tirth8205/code-review-graph> | build-graph, review-changes, review-delta, review-pr at commit `6a1ee1c7063cc35cfa5ff12b8198c29360f3e4ad` | MIT, copyright (c) 2026 Tirth Kanani |
 | <https://github.com/microsoft/skills> | cloud-solution-architect, frontend-design-review | MIT |
 | <https://github.com/oksure/openalex-research-mcp> | OpenAlex skill | MIT |
 | <https://github.com/supabase/agent-skills> | Postgres best-practices skill | MIT |
@@ -81,5 +82,6 @@ The configuration templates invoke, but do not redistribute:
 - `arxiv-mcp-server==0.5.0`
 - `semgrep==1.135.0`
 - `zotero-mcp-server==0.1.6`
+- `code-review-graph==2.3.7` from the PyPI wheel with SHA-256 `12196dce3e673bdec7fba97ae5c4dff7589adee73a721374f62efae76e0fdd88`, with `cryptography==50.0.0` pinned as a security override
 
-Users are responsible for reviewing the licenses, privacy behavior, network access, and security posture of these separately installed tools.
+The code-review-graph profile is optional and local-stdio only. A yimo-pi-kit-maintained launcher/runner constrains the audited wheel and intentionally excludes upstream prompts, installer, hooks, daemon, HTTP servers, cloud embedding/source-snippet paths, cross-repository access, and source-writing refactor tools. The four upstream Skills are installed unchanged at the pinned Git commit; their own license remains MIT. Users are responsible for reviewing licenses, transitive dependencies, privacy behavior, network access, and security posture whenever pins change.

@@ -1,7 +1,7 @@
 {
   "name": "yimo-pi-kit",
-  "version": "0.2.1",
-  "description": "A portable Pi coding-agent profile with extensions, subagents, skills, prompts, themes, DeepSeek Responses Web Search, and optional MCP integration.",
+  "version": "0.3.0",
+  "description": "A portable Pi coding-agent profile with extensions, subagents, skills, prompts, themes, DeepSeek Responses Web Search, and optional local code-review graph/MCP integration.",
   "type": "module",
   "license": "MIT",
   "author": "yimo",
@@ -14,7 +14,9 @@
     "mcp",
     "deepseek",
     "responses-api",
-    "web-search"
+    "web-search",
+    "code-review",
+    "knowledge-graph"
   ],
   "engines": {
     "node": ">=22.19.0"
@@ -44,6 +46,7 @@
     "typecheck": "tsc --noEmit",
     "doctor": "node ./scripts/cli.mjs doctor",
     "setup:mcp": "node ./scripts/cli.mjs setup-mcp",
+    "setup:code-review": "node ./scripts/cli.mjs setup-code-review",
     "setup:deepseek": "node ./scripts/cli.mjs setup-deepseek",
     "pack:dry-run": "npm pack --dry-run"
   },

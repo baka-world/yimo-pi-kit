@@ -49,6 +49,10 @@ function frontmatter(relative) {
 walk(root);
 
 for (const relative of checked) {
+  if (relative.split(path.sep).includes("__pycache__") || /[.]py[co]$/.test(relative)) {
+    fail(`Python cache artifact is not publishable: ${relative}`);
+  }
+
   const absolute = path.join(root, relative);
   const buffer = readFileSync(absolute);
   if (buffer.includes(0)) continue;
@@ -77,6 +81,7 @@ const forbiddenTopLevel = [
   "mcp-cache.json",
   "models-store.json",
   "state",
+  ".code-review-graph",
   "data",
   "backups",
 ];
@@ -187,7 +192,7 @@ for (const [name, source] of Object.entries(sources?.sources ?? {})) {
   }
 }
 
-const allowedProfiles = new Set(["academic", "architecture", "backend", "frontend", "security", "all"]);
+const allowedProfiles = new Set(["academic", "architecture", "backend", "frontend", "security", "code-review", "all"]);
 for (const [name, skill] of Object.entries(sources?.skills ?? {})) {
   if (!/^[a-z0-9-]+$/.test(name)) fail(`unsafe optional skill name: ${name}`);
   const source = sources?.sources?.[skill.source];
@@ -200,6 +205,161 @@ for (const [name, skill] of Object.entries(sources?.skills ?? {})) {
   if (!Array.isArray(skill.profiles) || skill.profiles.length === 0 || skill.profiles.some((profile) => !allowedProfiles.has(profile))) {
     fail(`optional skill ${name} has invalid profiles`);
   }
+}
+
+const codeReviewSource = sources?.sources?.["code-review-graph"];
+const expectedCodeReviewSkills = ["build-graph", "review-changes", "review-delta", "review-pr"];
+if (codeReviewSource?.ref !== "6a1ee1c7063cc35cfa5ff12b8198c29360f3e4ad") {
+  fail("code-review-graph skills must be pinned to the audited v2.3.7 commit");
+}
+for (const name of expectedCodeReviewSkills) {
+  const skill = sources?.skills?.[name];
+  if (skill?.source !== "code-review-graph" || skill?.profiles?.length !== 1 || skill.profiles[0] !== "code-review") {
+    fail(`code-review-graph skill ${name} must be isolated to the code-review profile`);
+  }
+}
+
+const codeReviewMcp = parseJson("mcp/code-review.json");
+const codeReviewServer = codeReviewMcp?.mcpServers?.["code-review-graph"];
+const expectedCodeReviewTools = [
+  "build_or_update_graph_tool",
+  "get_minimal_context_tool",
+  "get_impact_radius_tool",
+  "query_graph_tool",
+  "semantic_search_nodes_tool",
+  "get_review_context_tool",
+  "list_graph_stats_tool",
+  "get_docs_section_tool",
+  "get_affected_flows_tool",
+  "detect_changes_tool",
+];
+if (!codeReviewServer) fail("mcp/code-review.json is missing code-review-graph");
+else {
+  const args = codeReviewServer.args ?? [];
+  const packageSpec = args[args.indexOf("--from") + 1];
+  const toolsValue = args[args.indexOf("--tools") + 1];
+  const commandTools = typeof toolsValue === "string" ? toolsValue.split(",") : [];
+  if (codeReviewServer.command !== "uvx") fail("code-review-graph MCP must use portable uvx");
+  if (packageSpec !== "code-review-graph @ https://files.pythonhosted.org/packages/f3/8f/2df3fcca285b489d195706b09cefda3e57e7158185cb83905200d7b27199/code_review_graph-2.3.7-py3-none-any.whl#sha256=12196dce3e673bdec7fba97ae5c4dff7589adee73a721374f62efae76e0fdd88") {
+    fail("code-review-graph MCP primary wheel is not pinned to the audited 2.3.7 artifact and hash");
+  }
+  for (const requiredArg of ["--isolated", "--no-config", "--no-env-file", "--no-python-downloads", "--no-build", "--no-sources", "--no-progress", "serve", "--tools"]) {
+    if (!args.includes(requiredArg)) fail(`code-review-graph MCP is missing hardened argument ${requiredArg}`);
+  }
+  const pythonIndex = args.indexOf("--python");
+  const linkModeIndex = args.indexOf("--link-mode");
+  const fromIndex = args.indexOf("--from");
+  if (pythonIndex < 0 || args[pythonIndex + 1] !== "__YIMO_PI_KIT_PYTHON__") {
+    fail("code-review-graph MCP must resolve a reviewed local Python interpreter during setup");
+  }
+  if (linkModeIndex < 0 || args[linkModeIndex + 1] !== "copy") {
+    fail("code-review-graph MCP must copy, not symlink, uv cache artifacts into its environment");
+  }
+  if (
+    fromIndex < 0 ||
+    args[fromIndex + 2] !== "python" ||
+    args[fromIndex + 3] !== "-I" ||
+    args[fromIndex + 4] !== "__YIMO_PI_KIT_CODE_REVIEW_RUNNER__"
+  ) {
+    fail("code-review-graph MCP must start through the hardened package runner");
+  }
+  const withIndex = args.indexOf("--with");
+  const packageCutoffIndex = args.indexOf("--exclude-newer-package");
+  if (withIndex < 0 || args[withIndex + 1] !== "cryptography==50.0.0") {
+    fail("code-review-graph MCP must pin the audited cryptography security override");
+  }
+  if (packageCutoffIndex < 0 || args[packageCutoffIndex + 1] !== "cryptography=2026-07-31T14:25:11Z") {
+    fail("code-review-graph MCP cryptography override must retain its artifact cutoff");
+  }
+  for (const forbiddenArg of ["install", "--http", "--auto-watch"]) {
+    if (args.includes(forbiddenArg)) fail(`code-review-graph MCP must not use ${forbiddenArg}`);
+  }
+  if (JSON.stringify(commandTools) !== JSON.stringify(expectedCodeReviewTools)) {
+    fail("code-review-graph MCP command tool allowlist drifted");
+  }
+  if (JSON.stringify(codeReviewServer.includeTools) !== JSON.stringify(expectedCodeReviewTools)) {
+    fail("code-review-graph MCP adapter tool allowlist drifted");
+  }
+  if (codeReviewServer.env?.CRG_TOOLS !== toolsValue) fail("code-review-graph defense-in-depth environment tool allowlist drifted");
+  const requiredEnv = {
+    UV_ISOLATED: "1",
+    UV_NO_CONFIG: "1",
+    UV_NO_ENV_FILE: "1",
+    UV_NO_SOURCES: "1",
+    UV_NO_BUILD: "1",
+    UV_LINK_MODE: "copy",
+    UV_NO_PROGRESS: "1",
+    UV_INDEX_STRATEGY: "first-index",
+    UV_PRERELEASE: "disallow",
+    UV_PYTHON_DOWNLOADS: "never",
+    PYTHONPATH: "",
+    PYTHONHOME: "",
+    PYTHONNOUSERSITE: "1",
+    PYTHONSAFEPATH: "1",
+    NODE_OPTIONS: "",
+    NODE_PATH: "",
+    FASTMCP_ENV_FILE: "__YIMO_PI_KIT_FASTMCP_ENV__",
+    FASTMCP_HOME: "__YIMO_PI_KIT_FASTMCP_HOME__",
+    FASTMCP_TRANSPORT: "stdio",
+    FASTMCP_CHECK_FOR_UPDATES: "off",
+    FASTMCP_SHOW_SERVER_BANNER: "false",
+    FASTMCP_DEBUG: "false",
+    FASTMCP_DOCKET_URL: "memory://",
+    OTEL_PROPAGATORS: "none",
+    OTEL_PYTHON_TRACER_PROVIDER: "default_tracer_provider",
+    OTEL_PYTHON_METER_PROVIDER: "default_meter_provider",
+    OTEL_TRACES_EXPORTER: "none",
+    OTEL_METRICS_EXPORTER: "none",
+    OTEL_LOGS_EXPORTER: "none",
+    CRG_REPO_ROOT: "",
+    CRG_DATA_DIR: "",
+    CRG_RECURSE_SUBMODULES: "0",
+    CRG_ALLOW_REMOTE_CODE: "0",
+    CRG_PARSE_EXECUTOR: "thread",
+    CRG_BFS_ENGINE: "sql",
+    CRG_MAX_IMPACT_DEPTH: "2",
+    CRG_MAX_SEARCH_RESULTS: "20",
+    CRG_ACCEPT_CLOUD_EMBEDDINGS: "0",
+    YIMO_PI_KIT_NODE: "__YIMO_PI_KIT_NODE__",
+    YIMO_PI_KIT_GIT_SHIM: "__YIMO_PI_KIT_GIT_SHIM__",
+    YIMO_PI_KIT_CODE_REVIEW_PROFILE: "managed-v1",
+  };
+  for (const [key, value] of Object.entries(requiredEnv)) {
+    if (codeReviewServer.env?.[key] !== value) fail(`code-review-graph hardened environment drifted: ${key}`);
+  }
+  if (codeReviewServer.env?.HOME !== "${HOME}/.cache/yimo-pi-kit/code-review-graph-home") {
+    fail("code-review-graph MCP must isolate its upstream user registry");
+  }
+  if (codeReviewServer.env?.UV_CACHE_DIR !== "${HOME}/.cache/yimo-pi-kit/code-review-graph-uv") {
+    fail("code-review-graph MCP must use its dedicated uv cache");
+  }
+  if (codeReviewServer.directTools !== false) fail("code-review-graph tools must remain proxy-only by default");
+  if (codeReviewServer.lifecycle !== "lazy") fail("code-review-graph MCP must start lazily");
+  if (codeReviewServer.exposeResources !== false) fail("code-review-graph MCP resources must remain hidden");
+  for (const key of ["CRG_EMBEDDING_MODEL", "CRG_OPENAI_API_KEY", "CRG_OPENAI_BASE_URL", "CRG_OPENAI_MODEL", "CRG_OPENAI_BATCH_SIZE", "CRG_OPENAI_DIMENSION", "MINIMAX_API_KEY", "GOOGLE_API_KEY"]) {
+    if (codeReviewServer.env?.[key] !== "") fail(`code-review-graph MCP must clear inherited cloud embedding setting ${key}`);
+  }
+  if (codeReviewServer.cwd !== undefined || codeReviewServer.url !== undefined || codeReviewServer.socket !== undefined) {
+    fail("code-review-graph MCP must inherit the active Pi repository cwd and remain local stdio");
+  }
+}
+
+const codeReviewRunner = readFileSync(path.join(root, "scripts", "code-review-runner.py"), "utf8");
+for (const marker of [
+  "LOCKED_ROOT = _find_locked_root()",
+  "os.umask(0o077)",
+  "subprocess.run = _guarded_subprocess_run",
+  "incremental.get_data_dir = _safe_graph_data_dir",
+  "server._resolve_repo_root = _locked_repo_root",
+  "include_source=False",
+  "embedding_provider=None",
+  "server.mcp.local_provider.remove_prompt",
+  "refusing hard-linked graph data file",
+  '"YIMO_PI_KIT_CODE_REVIEW_PROFILE": "managed-v1"',
+  "Unix-domain sockets can expose privileged local services",
+  "socket.gethostbyname = _guarded_gethostbyname",
+]) {
+  if (!codeReviewRunner.includes(marker)) fail(`hardened code-review runner is missing marker: ${marker}`);
 }
 
 if (process.platform !== "win32") {

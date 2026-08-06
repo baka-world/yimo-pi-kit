@@ -25,6 +25,16 @@
         "packages/pi/skills/context7-docs"
       ]
     },
+    "code-review-graph": {
+      "url": "https://github.com/tirth8205/code-review-graph.git",
+      "ref": "6a1ee1c7063cc35cfa5ff12b8198c29360f3e4ad",
+      "paths": [
+        "skills/build-graph",
+        "skills/review-changes",
+        "skills/review-delta",
+        "skills/review-pr"
+      ]
+    },
     "microsoft-skills": {
       "url": "https://github.com/microsoft/skills.git",
       "ref": "c33193b1b2dd14d5946e3c6213fd095ffa5b31df",
@@ -72,6 +82,11 @@
       "path": "academic-pipeline",
       "profiles": ["academic", "all"]
     },
+    "build-graph": {
+      "source": "code-review-graph",
+      "path": "skills/build-graph",
+      "profiles": ["code-review"]
+    },
     "cloud-solution-architect": {
       "source": "microsoft-skills",
       "path": ".github/skills/cloud-solution-architect",
@@ -101,6 +116,21 @@
       "source": "openalex-research-mcp",
       "path": "skill",
       "profiles": ["academic", "all"]
+    },
+    "review-changes": {
+      "source": "code-review-graph",
+      "path": "skills/review-changes",
+      "profiles": ["code-review"]
+    },
+    "review-delta": {
+      "source": "code-review-graph",
+      "path": "skills/review-delta",
+      "profiles": ["code-review"]
+    },
+    "review-pr": {
+      "source": "code-review-graph",
+      "path": "skills/review-pr",
+      "profiles": ["code-review"]
     },
     "supabase-postgres-best-practices": {
       "source": "supabase-agent-skills",
