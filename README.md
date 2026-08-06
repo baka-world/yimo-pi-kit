@@ -2,11 +2,11 @@
 
 A portable, opinionated profile for the [Pi coding agent](https://pi.dev). It packages reusable capabilities while deliberately excluding credentials, sessions, private endpoints, caches, downloaded data, and machine-specific binaries.
 
-> Status: `0.1.0` pre-release. Requires Pi `0.83.0` or newer and Node.js `22.19.0` or newer.
+> Status: `0.2.0` pre-release. Requires Pi `0.83.0` or newer and Node.js `22.19.0` or newer.
 
 ## Included
 
-- Portable extensions for safe temp files, API-key failover, automatic context continuation, compaction status, LaTeX rendering, task notifications, work logs, todos, summaries, and Git/session safeguards.
+- Portable extensions for safe temp files, API-key failover, DeepSeek Responses API provider-side Web Search, automatic context continuation, compaction status, LaTeX rendering, task notifications, work logs, todos, summaries, and Git/session safeguards.
 - A subagent tool with bundled `scout`, `planner`, `worker`, `reviewer`, backend, frontend, architecture, security, academic, and deep-research agents.
 - Six locally maintained skills for engineering, architecture, security, academic retrieval, and public-dataset research.
 - Three subagent workflow prompts.
@@ -33,7 +33,7 @@ pi install /path/to/yimo-pi-kit
 ### Git release
 
 ```bash
-pi install git:github.com/YOUR_ACCOUNT/yimo-pi-kit@v0.1.0
+pi install git:github.com/YOUR_ACCOUNT/yimo-pi-kit@v0.2.0
 ```
 
 ### npm release
@@ -41,7 +41,7 @@ pi install git:github.com/YOUR_ACCOUNT/yimo-pi-kit@v0.1.0
 After the package is published:
 
 ```bash
-pi install npm:yimo-pi-kit@0.1.0
+pi install npm:yimo-pi-kit@0.2.0
 ```
 
 Restart Pi or run `/reload`, then check:
@@ -88,6 +88,29 @@ Requirements by server:
 | Zotero | `uvx` | Local mode; Zotero must expose its local API |
 
 All supplied MCP servers are lazy. Zotero write/mutation tools are excluded by default.
+
+## DeepSeek V4 Flash Responses API and Web Search
+
+The package includes an opt-in model setup command and a request-scoped extension for DeepSeek's provider-side `web_search` tool. No model configuration or credential is installed automatically.
+
+```bash
+node ./scripts/cli.mjs setup-deepseek
+```
+
+When the package path is not obvious, run `/kit deepseek`; it places the resolved setup command in the editor for review.
+
+Authenticate independently with Pi `/login` or `DEEPSEEK_API_KEY`, run `/reload`, and select `deepseek/deepseek-v4-flash`.
+
+Controls:
+
+```text
+/deepseek-websearch auto|off|force|status
+/deepseek-search <query>
+```
+
+Web Search is **off by default**. `auto` explicitly adds the provider-side search tool and lets the model decide; `force` requires it when no other specific tool is already forced; `off` leaves the request unchanged. `/deepseek-search` explicitly forces one matching Responses request and must be submitted while the agent is idle. Search queries and retrieved context are processed by the provider, and retrieved pages must be treated as untrusted content.
+
+See [DeepSeek Responses and Web Search](docs/deepseek-responses.md) for setup, environment overrides, data-flow details, and limitations.
 
 ## Optional third-party skills
 
@@ -171,6 +194,7 @@ PI_CODING_AGENT_DIR="$TEST_DIR" pi --list-models
 See:
 
 - [Migration guide](docs/migration.md)
+- [DeepSeek Responses and Web Search](docs/deepseek-responses.md)
 - [Release guide](docs/release.md)
 - [Security policy](SECURITY.md)
 - [Third-party notices](THIRD_PARTY_NOTICES.md)

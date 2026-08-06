@@ -67,6 +67,10 @@ The adapter is not copied into this repository. Install it separately as a Pi pa
 
 The installer intentionally does not install Vercel's web-design-guidelines skill because the inspected revision did not carry an explicit license declaration for that skill.
 
+## External provider services
+
+The DeepSeek model example points to the public `https://api.deepseek.com` service and the Web Search extension can request DeepSeek's provider-side `web_search` tool. No DeepSeek SDK, model weights, search result, credential, or proprietary code is redistributed. Users must review DeepSeek's current API terms, privacy behavior, availability, pricing, and regional requirements.
+
 ## MCP servers
 
 The configuration templates invoke, but do not redistribute:

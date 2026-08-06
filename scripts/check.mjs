@@ -104,9 +104,29 @@ if (packageJson) {
       }
     }
   }
+  if (!packageJson.pi?.extensions?.includes("./extensions/deepseek-web-search.ts")) {
+    fail("DeepSeek Web Search extension is missing from the Pi manifest");
+  }
 }
 
 for (const relative of checked.filter((file) => file.endsWith(".json"))) parseJson(relative);
+
+const modelsExample = parseJson("examples/models.example.json");
+const deepseekProvider = modelsExample?.providers?.deepseek;
+const deepseekResponsesModel = Array.isArray(deepseekProvider?.models)
+  ? deepseekProvider.models.find((model) => model?.id === "deepseek-v4-flash")
+  : undefined;
+if (!deepseekResponsesModel) fail("examples/models.example.json is missing deepseek-v4-flash");
+else {
+  if (deepseekResponsesModel.api !== "openai-responses") fail("DeepSeek V4 Flash example must use openai-responses");
+  if (deepseekResponsesModel.baseUrl !== "https://api.deepseek.com") fail("DeepSeek example must use the public API endpoint");
+  if (deepseekResponsesModel.compat?.supportsToolSearch !== false) {
+    fail("DeepSeek Responses example must disable client-side tool search");
+  }
+}
+if (deepseekProvider && ["apiKey", "apiKeys", "apiKeyFile"].some((key) => key in deepseekProvider)) {
+  fail("DeepSeek example must not contain credential fields");
+}
 
 const sources = parseJson("scripts/skill-sources.json");
 const optionalSkillNames = new Set(Object.keys(sources?.skills ?? {}));

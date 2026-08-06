@@ -34,7 +34,7 @@ function agentDir() {
 
 function commandExists(command) {
   const probe = process.platform === "win32" ? "where" : "sh";
-  const args = process.platform === "win32" ? [command] : ["-lc", `command -v ${JSON.stringify(command)}`];
+  const args = process.platform === "win32" ? [command] : ["-lc", "command -v -- \"$1\"", "sh", command];
   return spawnSync(probe, args, { stdio: "ignore" }).status === 0;
 }
 
@@ -100,6 +100,33 @@ function mergeForce(existing, overlay) {
     output[key] = key in output ? mergeForce(output[key], value) : structuredClone(value);
   }
   return output;
+}
+
+function mergeModelsById(existingModels, templateModels, force, providerBaseUrl) {
+  const output = Array.isArray(existingModels) ? structuredClone(existingModels) : [];
+  const summary = { added: 0, updated: 0, preserved: 0 };
+  for (const templateModel of templateModels) {
+    const index = output.findIndex((model) => model && typeof model === "object" && model.id === templateModel.id);
+    if (index < 0) {
+      const addedModel = structuredClone(templateModel);
+      if (typeof providerBaseUrl === "string" && providerBaseUrl) addedModel.baseUrl = providerBaseUrl;
+      output.push(addedModel);
+      summary.added++;
+    } else if (force) {
+      const existingModel = output[index];
+      const preservedEndpoint = typeof existingModel.baseUrl === "string" && existingModel.baseUrl
+        ? existingModel.baseUrl
+        : typeof providerBaseUrl === "string" && providerBaseUrl
+          ? providerBaseUrl
+          : undefined;
+      output[index] = mergeForce(existingModel, templateModel);
+      if (preservedEndpoint) output[index].baseUrl = preservedEndpoint;
+      summary.updated++;
+    } else {
+      summary.preserved++;
+    }
+  }
+  return { models: output, summary };
 }
 
 function writeJsonAtomic(file, value) {
@@ -168,6 +195,23 @@ function doctor({ json = false } = {}) {
   const adapterPath = adapterCandidates.find((candidate) => existsSync(candidate));
   add("pi-mcp-adapter", Boolean(adapterPath), adapterPath || "optional; install pi-mcp-adapter@2.15.0 for MCP", false);
 
+  const modelsPath = path.join(agentDir(), "models.json");
+  try {
+    const modelsConfig = parseJsonFile(modelsPath);
+    const deepseekModels = modelsConfig.providers?.deepseek?.models;
+    const responsesModel = Array.isArray(deepseekModels)
+      ? deepseekModels.find((model) => model?.id === "deepseek-v4-flash" && model?.api === "openai-responses")
+      : undefined;
+    add(
+      "DeepSeek V4 Flash Responses API",
+      Boolean(responsesModel),
+      responsesModel ? `configured in ${modelsPath}` : "optional; run setup-deepseek",
+      false,
+    );
+  } catch (error) {
+    add("DeepSeek V4 Flash Responses API", false, error instanceof Error ? error.message : String(error), false);
+  }
+
   const report = {
     package: `${packageJson.name}@${packageJson.version}`,
     root,
@@ -204,6 +248,52 @@ function setupMcp(args) {
   console.log("Existing server definitions were preserved unless --force was supplied.");
   console.log("Install the parent-session adapter with: pi install npm:pi-mcp-adapter@2.15.0");
   console.log("Python MCP servers require uvx; Node MCP servers require npx.");
+}
+
+function setupDeepseek(args) {
+  const flags = parseFlags(args);
+  const target = path.resolve(flags.target || path.join(agentDir(), "models.json"));
+  if (lexicalPathExists(target) && lstatSync(target).isSymbolicLink()) {
+    throw new Error(`Refusing symlinked models target: ${target}`);
+  }
+
+  const example = parseJsonFile(path.join(root, "examples", "models.example.json"));
+  const templateProvider = example.providers?.deepseek;
+  if (!templateProvider || typeof templateProvider !== "object" || Array.isArray(templateProvider) || !Array.isArray(templateProvider.models)) {
+    throw new Error("DeepSeek model template is missing or invalid");
+  }
+
+  const existing = parseJsonFile(target);
+  const next = structuredClone(existing);
+  if (!next.providers || typeof next.providers !== "object" || Array.isArray(next.providers)) next.providers = {};
+
+  const existingProvider = next.providers.deepseek;
+  const providerBase = existingProvider && typeof existingProvider === "object" && !Array.isArray(existingProvider)
+    ? existingProvider
+    : {};
+  const { models: templateModels, ...templateSettings } = templateProvider;
+  const mergedProvider = flags.force
+    ? mergeForce(providerBase, templateSettings)
+    : mergeMissing(templateSettings, providerBase);
+  const { models, summary } = mergeModelsById(
+    providerBase.models,
+    templateModels,
+    Boolean(flags.force),
+    providerBase.baseUrl,
+  );
+  mergedProvider.models = models;
+  next.providers.deepseek = mergedProvider;
+
+  const backup = backupFile(target);
+  writeJsonAtomic(target, next);
+
+  console.log(`DeepSeek Responses configuration written to ${target}`);
+  if (backup) console.log(`Previous configuration backed up to ${backup}`);
+  console.log(`Models added: ${summary.added}; updated: ${summary.updated}; preserved: ${summary.preserved}.`);
+  if (summary.preserved > 0 && !flags.force) {
+    console.log("Existing model definitions won. Re-run with --force to replace matching DeepSeek model fields.");
+  }
+  console.log("Authenticate with Pi /login or set DEEPSEEK_API_KEY, then select deepseek/deepseek-v4-flash.");
 }
 
 function lexicalPathExists(target) {
@@ -388,7 +478,7 @@ function installSkills(args) {
 }
 
 function usage() {
-  console.log(`Usage: yimo-pi-kit <command> [options]\n\nCommands:\n  doctor [--json]\n      Check Pi, Node, package dependencies, and optional MCP prerequisites.\n\n  setup-mcp [--target <path>] [--force]\n      Merge the portable MCP profile into the Pi global MCP config. Existing values win by default.\n\n  install-skills [academic|architecture|backend|frontend|security|all] [--copy]\n      Download pinned third-party skill repositories and link selected skills into the Pi agent directory.\n\n  help\n      Show this help.\n`);
+  console.log(`Usage: yimo-pi-kit <command> [options]\n\nCommands:\n  doctor [--json]\n      Check Pi, Node, package dependencies, DeepSeek setup, and optional MCP prerequisites.\n\n  setup-mcp [--target <path>] [--force]\n      Merge the portable MCP profile into the Pi global MCP config. Existing values win by default.\n\n  setup-deepseek [--target <path>] [--force]\n      Add DeepSeek V4 Flash using the Responses API to models.json. Matching models are preserved unless --force is supplied.\n\n  install-skills [academic|architecture|backend|frontend|security|all] [--copy]\n      Download pinned third-party skill repositories and link selected skills into the Pi agent directory.\n\n  help\n      Show this help.\n`);
 }
 
 const [command = "help", ...args] = process.argv.slice(2);
@@ -399,6 +489,9 @@ try {
       break;
     case "setup-mcp":
       setupMcp(args);
+      break;
+    case "setup-deepseek":
+      setupDeepseek(args);
       break;
     case "install-skills":
       installSkills(args);

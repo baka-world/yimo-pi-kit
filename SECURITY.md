@@ -22,6 +22,12 @@ Project-local `.pi/agents` are repository-controlled instructions. The subagent 
 
 MCP servers execute local or remote tools with their own privileges. The supplied configs use lazy startup and pin package versions, but users must still review each server and its upstream project. Zotero write tools are excluded by default.
 
+## Provider-side Web Search
+
+The DeepSeek extension is `off` by default and adds a provider-side `web_search` declaration only after explicit opt-in for the configured DeepSeek Responses API model. This sends prompts/search queries to the provider and may expose retrieved external content to the model. Search results are untrusted data, not instructions. Review DeepSeek's privacy, retention, regional, and service terms before enabling it; keep `off` for sensitive tasks or environments where external retrieval is prohibited.
+
+The extension does not independently verify sources or provide a browser sandbox. A cited page can be wrong, malicious, or prompt-injection content even when the provider successfully retrieved it.
+
 ## Untrusted repositories
 
 Project trust is not a sandbox. Run Pi in a container, VM, micro-VM, or other operating-system isolation boundary when working with untrusted repositories or unattended automation.
