@@ -16,7 +16,7 @@
 For project-local installation:
 
 ```bash
-pi install -l git:github.com/YOUR_ORG/yimo-pi-kit@v0.2.0
+pi install -l git:github.com/YOUR_ORG/yimo-pi-kit@v0.2.1
 ```
 
 Commit `.pi/settings.json`. Team members must trust the project before Pi loads project packages or extensions. Pin releases for reproducibility.
@@ -33,7 +33,7 @@ Keep team-specific agents in `.pi/agents` only when repository control and proje
 | Private provider catalog | Sometimes | Private profile repository |
 | API keys and OAuth credentials | No | `/login`, env, OS credential store |
 | Sessions and reports | No by default | Review/redact individually |
-| Trust decisions and caches | No | Recreate locally |
+| Trust decisions, hint state, and caches | No | Recreate locally |
 | Downloaded papers/Zotero data | No by default | User-owned local storage |
 
 ## Private overlay pattern

@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import { createRequire } from "node:module";
 import * as fs from "node:fs";
 import * as path from "node:path";
@@ -9,11 +10,18 @@ import { discoverAgents } from "../subagent/agents.ts";
 
 const PACKAGE_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 const PACKAGE_JSON_PATH = path.join(PACKAGE_ROOT, "package.json");
+const KIT_STATE_DIR = path.join(getAgentDir(), "state");
+const KIT_STATE_PATH = path.join(KIT_STATE_DIR, "yimo-pi-kit.json");
 const requireFromHere = createRequire(import.meta.url);
 
 interface PackageMetadata {
 	name?: string;
 	version?: string;
+}
+
+interface KitState {
+	lastHintVersion?: string;
+	hintedAt?: string;
 }
 
 function readPackageMetadata(): PackageMetadata {
@@ -46,7 +54,71 @@ function hasDeepseekResponsesModel(): boolean {
 	}
 }
 
+function lexicalStats(target: string): fs.Stats | undefined {
+	try {
+		return fs.lstatSync(target);
+	} catch {
+		return undefined;
+	}
+}
+
+function hasUnsafeStatePath(): boolean {
+	const directoryStats = lexicalStats(KIT_STATE_DIR);
+	if (directoryStats && (!directoryStats.isDirectory() || directoryStats.isSymbolicLink())) return true;
+	const fileStats = lexicalStats(KIT_STATE_PATH);
+	return Boolean(fileStats && (!fileStats.isFile() || fileStats.isSymbolicLink()));
+}
+
+function readKitState(): KitState {
+	try {
+		if (hasUnsafeStatePath()) return {};
+		const parsed = JSON.parse(fs.readFileSync(KIT_STATE_PATH, "utf8"));
+		return parsed && typeof parsed === "object" && !Array.isArray(parsed) ? parsed as KitState : {};
+	} catch {
+		return {};
+	}
+}
+
+function writeKitState(state: KitState): void {
+	try {
+		if (hasUnsafeStatePath()) return;
+		fs.mkdirSync(KIT_STATE_DIR, { recursive: true, mode: 0o700 });
+		try { fs.chmodSync(KIT_STATE_DIR, 0o700); } catch {}
+		const temporary = `${KIT_STATE_PATH}.${process.pid}.${randomUUID()}.tmp`;
+		try {
+			fs.writeFileSync(temporary, `${JSON.stringify(state, null, 2)}\n`, { mode: 0o600, flag: "wx" });
+			try { fs.chmodSync(temporary, 0o600); } catch {}
+			fs.renameSync(temporary, KIT_STATE_PATH);
+			try { fs.chmodSync(KIT_STATE_PATH, 0o600); } catch {}
+		} finally {
+			try { fs.rmSync(temporary, { force: true }); } catch {}
+		}
+	} catch {
+		// A setup hint must never prevent Pi startup.
+	}
+}
+
+function startupHintSuppressed(): boolean {
+	return /^(?:1|true|yes|on)$/i.test(process.env.YIMO_PI_KIT_HIDE_STARTUP_HINT?.trim() ?? "");
+}
+
 export default function (pi: ExtensionAPI) {
+	let startupHintShown = false;
+
+	pi.on("session_start", (_event, ctx) => {
+		if (startupHintShown || ctx.mode !== "tui" || startupHintSuppressed()) return;
+		const metadata = readPackageMetadata();
+		const version = metadata.version;
+		if (!version || readKitState().lastHintVersion === version) return;
+
+		startupHintShown = true;
+		const deepseekResponses = hasDeepseekResponsesModel();
+		const message = deepseekResponses
+			? `${metadata.name ?? "yimo-pi-kit"}@${version} installed/updated. DeepSeek V4 Flash Responses API is configured. Provider-side Web Search remains off by default; use /deepseek-websearch auto or /deepseek-search <query>. Run /kit doctor to verify the rest of the setup.`
+			: `${metadata.name ?? "yimo-pi-kit"}@${version} installed/updated. Package installation does not change DeepSeek requests automatically: Flash remains on Pi's default Chat Completions until you review and run /kit deepseek. Provider-side Web Search is off by default. Run /kit doctor for status.`;
+		ctx.ui.notify(message, deepseekResponses ? "info" : "warning");
+		writeKitState({ lastHintVersion: version, hintedAt: new Date().toISOString() });
+	});
 	pi.registerCommand("kit", {
 		description: "Show yimo-pi-kit status and setup hints (/kit [status|agents|doctor|setup|deepseek])",
 		handler: async (args, ctx) => {

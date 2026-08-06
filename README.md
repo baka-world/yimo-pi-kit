@@ -2,7 +2,7 @@
 
 A portable, opinionated profile for the [Pi coding agent](https://pi.dev). It packages reusable capabilities while deliberately excluding credentials, sessions, private endpoints, caches, downloaded data, and machine-specific binaries.
 
-> Status: `0.2.0` pre-release. Requires Pi `0.83.0` or newer and Node.js `22.19.0` or newer.
+> Status: `0.2.1` pre-release. Requires Pi `0.83.0` or newer and Node.js `22.19.0` or newer.
 
 ## Included
 
@@ -33,7 +33,7 @@ pi install /path/to/yimo-pi-kit
 ### Git release
 
 ```bash
-pi install git:github.com/YOUR_ACCOUNT/yimo-pi-kit@v0.2.0
+pi install git:github.com/YOUR_ACCOUNT/yimo-pi-kit@v0.2.1
 ```
 
 ### npm release
@@ -41,7 +41,7 @@ pi install git:github.com/YOUR_ACCOUNT/yimo-pi-kit@v0.2.0
 After the package is published:
 
 ```bash
-pi install npm:yimo-pi-kit@0.2.0
+pi install npm:yimo-pi-kit@0.2.1
 ```
 
 Restart Pi or run `/reload`, then check:
@@ -50,6 +50,8 @@ Restart Pi or run `/reload`, then check:
 /kit doctor
 /kit agents
 ```
+
+On the first interactive startup after installing or upgrading each kit version, Pi shows a one-time setup hint. It explicitly says whether DeepSeek V4 Flash is still using Pi's default Chat Completions or the opt-in Responses API override, reminds you that Web Search is off by default, and points to `/kit deepseek` and `/kit doctor`. The acknowledgment stores only the kit version and timestamp in `$PI_CODING_AGENT_DIR/state/yimo-pi-kit.json` with private permissions; it contains no session or credential data. Set `YIMO_PI_KIT_HIDE_STARTUP_HINT=1` to suppress it.
 
 Use `pi config` to disable any extension, skill, prompt, or theme you do not want.
 

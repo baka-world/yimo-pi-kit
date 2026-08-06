@@ -1,6 +1,6 @@
 # DeepSeek V4 Flash Responses API and provider-side Web Search
 
-This kit can opt `deepseek/deepseek-v4-flash` into Pi's `openai-responses` transport and expose DeepSeek's provider-side `web_search` tool. Neither the model override nor authentication is installed silently.
+This kit can opt `deepseek/deepseek-v4-flash` into Pi's `openai-responses` transport and expose DeepSeek's provider-side `web_search` tool. Neither the model override nor authentication is installed silently. After installation or upgrade, the first interactive Pi startup shows a one-time versioned hint explaining whether the local model is still on Chat Completions or has the Responses API override.
 
 ## 1. Add the Responses API model override
 

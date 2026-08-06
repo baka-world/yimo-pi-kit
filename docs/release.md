@@ -26,6 +26,7 @@ PI_CODING_AGENT_DIR="$TEST_DIR" pi --no-session
 Verify:
 
 - startup has no extension errors;
+- the one-time post-install/upgrade TUI hint appears once per version, distinguishes Chat Completions from Responses API, and respects `YIMO_PI_KIT_HIDE_STARTUP_HINT=1`;
 - `/kit doctor` and `/kit agents` work;
 - `setup-deepseek` safely merges into an empty and an existing `models.json`;
 - `/deepseek-websearch` loads and only matching Responses API requests receive `web_search`;
@@ -40,14 +41,14 @@ Verify:
 
 ```bash
 git status --short
-git tag -s v0.2.0 -m "yimo-pi-kit v0.2.0"
+git tag -s v0.2.1 -m "yimo-pi-kit v0.2.1"
 git push origin main --tags
 ```
 
 Consumers install the tag:
 
 ```bash
-pi install git:github.com/YOUR_ACCOUNT/yimo-pi-kit@v0.2.0
+pi install git:github.com/YOUR_ACCOUNT/yimo-pi-kit@v0.2.1
 ```
 
 Pinned Git refs are not advanced by `pi update --extensions`; publish a new tag and update the install source explicitly.
@@ -62,7 +63,7 @@ npm publish --access public
 Consumers install:
 
 ```bash
-pi install npm:yimo-pi-kit@0.2.0
+pi install npm:yimo-pi-kit@0.2.1
 ```
 
 Use semantic versioning. Treat changes to agent behavior, tool permissions, automatic side effects, resource names, MCP servers, and required Pi APIs as release-significant.

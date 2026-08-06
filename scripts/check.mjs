@@ -76,6 +76,7 @@ const forbiddenTopLevel = [
   "trust.json",
   "mcp-cache.json",
   "models-store.json",
+  "state",
   "data",
   "backups",
 ];

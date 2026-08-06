@@ -14,6 +14,8 @@ This package must never contain:
 
 Use environment variables, Pi `/login`, an operating-system credential store, or a user-owned key file outside this repository. The API-key failover extension requires key files to be owned by the current user and mode `0600` or stricter on Unix.
 
+The versioned startup-hint acknowledgment is local runtime state at `$PI_CODING_AGENT_DIR/state/yimo-pi-kit.json`. It stores only the last hinted package version and timestamp, uses private permissions where possible, refuses symlinked state paths, and must not be committed.
+
 ## Project agents
 
 Project-local `.pi/agents` are repository-controlled instructions. The subagent extension refuses to load them from an untrusted project and asks for confirmation in interactive mode by default.
