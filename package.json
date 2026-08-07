@@ -59,7 +59,8 @@
     "pack:dry-run": "npm pack --dry-run"
   },
   "dependencies": {
-    "strip-json-comments": "5.0.3"
+    "strip-json-comments": "5.0.3",
+    "yaml": "^2.9.0"
   },
   "devDependencies": {
     "@earendil-works/pi-agent-core": "0.84.0",
@@ -96,7 +97,8 @@
       "./extensions/summarize/index.ts",
       "./extensions/task-notifier/index.ts",
       "./extensions/todo/index.ts",
-      "./extensions/worklog.ts"
+      "./extensions/worklog.ts",
+      "./extensions/better-custom/index.ts"
     ],
     "skills": [
       "./skills"

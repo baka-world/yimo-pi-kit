@@ -6,7 +6,7 @@ A portable, opinionated profile for the [Pi coding agent](https://pi.dev). It pa
 
 ## Included
 
-- Portable extensions for safe temp files, API-key failover, DeepSeek Responses API provider-side Web Search, automatic context continuation, compaction status, LaTeX rendering, task notifications, work logs, todos, summaries, and Git/session safeguards.
+- Portable extensions for safe temp files, API-key failover, DeepSeek Responses API provider-side Web Search, automatic context continuation, compaction status, LaTeX rendering, task notifications, work logs, todos, summaries, Git/session safeguards, and an interactive custom-provider wizard (`/better-custom`).
 - A subagent tool with bundled `scout`, `planner`, `worker`, `reviewer`, backend, frontend, architecture, security, academic, and deep-research agents.
 - Six locally maintained skills for engineering, architecture, security, academic retrieval, and public-dataset research.
 - Three subagent workflow prompts.
