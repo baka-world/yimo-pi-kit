@@ -15,6 +15,8 @@ npm pack --dry-run
 
 Inspect the tarball file list. It must not contain credentials, sessions, caches, local binaries, downloaded data, backups, generated Python bytecode, or absolute personal paths.
 
+Every push to `main` and every pull request also runs these gates automatically via GitHub Actions (`.github/workflows/ci.yml`): `npm run check`, `npm run audit:prod`, `npm pack --dry-run`, a Python syntax parse of `scripts/code-review-runner.py`, and a Gitleaks secret scan. CI must be green before releasing.
+
 ## 3. Test in isolation
 
 ```bash
@@ -50,7 +52,7 @@ git push origin main --tags
 Consumers install the tag:
 
 ```bash
-pi install git:github.com/YOUR_ACCOUNT/yimo-pi-kit@v0.3.0
+pi install git:github.com/baka-world/yimo-pi-kit@v0.3.0
 ```
 
 Pinned Git refs are not advanced by `pi update --extensions`; publish a new tag and update the install source explicitly.
@@ -61,6 +63,8 @@ Pinned Git refs are not advanced by `pi update --extensions`; publish a new tag 
 npm login
 npm publish --access public
 ```
+
+If the account has two-factor authentication enabled, `npm publish` requires a one-time password; pass it with `--otp=<code>` (or let the browser-based CLI login prompt complete the publish).
 
 Consumers install:
 

@@ -34,7 +34,7 @@ pi install /path/to/yimo-pi-kit
 ### Git release
 
 ```bash
-pi install git:github.com/YOUR_ACCOUNT/yimo-pi-kit@v0.3.0
+pi install git:github.com/baka-world/yimo-pi-kit@v0.3.0
 ```
 
 ### npm release
