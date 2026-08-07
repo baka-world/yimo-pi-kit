@@ -3,7 +3,7 @@ import { createRequire } from "node:module";
 import * as fs from "node:fs";
 import * as path from "node:path";
 import { fileURLToPath } from "node:url";
-import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
+import type { ExtensionAPI, ExtensionCommandContext } from "@earendil-works/pi-coding-agent";
 import { getAgentDir } from "@earendil-works/pi-coding-agent";
 import stripJsonComments from "strip-json-comments";
 import { discoverAgents } from "../subagent/agents.ts";
@@ -169,6 +169,43 @@ function startupHintSuppressed(): boolean {
 	return /^(?:1|true|yes|on)$/i.test(process.env.YIMO_PI_KIT_HIDE_STARTUP_HINT?.trim() ?? "");
 }
 
+async function runCliInPi(
+	pi: ExtensionAPI,
+	ctx: ExtensionCommandContext,
+	label: string,
+	cliArgs: string[],
+	confirmTitle: string,
+	confirmMessage: string,
+): Promise<void> {
+	const cliPath = path.join(PACKAGE_ROOT, "scripts", "cli.mjs");
+	const setupCommand = `!node ${JSON.stringify(cliPath)} ${cliArgs.join(" ")}`;
+	if (ctx.mode !== "tui") {
+		ctx.ui.setEditorText(setupCommand);
+		ctx.ui.notify(`命令已复制到编辑器（非交互模式不自动执行）：${setupCommand}`, "info");
+		return;
+	}
+	const confirmed = await ctx.ui.confirm(confirmTitle, confirmMessage, { timeout: 120000 });
+	if (!confirmed) {
+		ctx.ui.setEditorText(setupCommand);
+		ctx.ui.notify(`已取消；命令已复制到编辑器：${setupCommand}`, "info");
+		return;
+	}
+	ctx.ui.setStatus("yimo-pi-kit", `运行 ${label}…`);
+	try {
+		const result = await pi.exec(process.execPath, [cliPath, ...cliArgs], { timeout: 900000 });
+		ctx.ui.setStatus("yimo-pi-kit", undefined);
+		const tail = (result.stdout || result.stderr || "").trim().split("\n").slice(-10).join("\n");
+		if (result.code === 0) {
+			ctx.ui.notify(`${label} 完成。${tail ? `\n${tail}` : ""}`, "info");
+		} else {
+			ctx.ui.notify(`${label} 失败 (exit ${result.code})。${tail ? `\n${tail}` : ""}`, "error");
+		}
+	} catch (error) {
+		ctx.ui.setStatus("yimo-pi-kit", undefined);
+		ctx.ui.notify(`${label} 失败：${error instanceof Error ? error.message : String(error)}`, "error");
+	}
+}
+
 export default function (pi: ExtensionAPI) {
 	let startupHintShown = false;
 
@@ -191,7 +228,7 @@ export default function (pi: ExtensionAPI) {
 		writeKitState({ lastHintVersion: version, hintedAt: new Date().toISOString() });
 	});
 	pi.registerCommand("kit", {
-		description: "Show yimo-pi-kit status and setup hints (/kit [status|agents|doctor|setup|deepseek|graph])",
+		description: "yimo-pi-kit 状态与安装向导 (/kit [status|agents|doctor|setup [profile]|deepseek|graph]；setup/deepseek/graph 会在 Pi 内确认后直接执行)",
 		handler: async (args, ctx) => {
 			const action = args.trim().toLowerCase() || "status";
 			const metadata = readPackageMetadata();
@@ -227,41 +264,61 @@ export default function (pi: ExtensionAPI) {
 				return;
 			}
 
-			if (action === "setup") {
-				const cliPath = path.join(PACKAGE_ROOT, "scripts", "cli.mjs");
-				const setupCommand = `!node ${JSON.stringify(cliPath)} setup-mcp`;
-				ctx.ui.setEditorText(setupCommand);
-				ctx.ui.notify(
-					`Setup command copied to the editor: ${setupCommand}. Install parent MCP first with pi install npm:pi-mcp-adapter@2.15.0.`,
-					"info",
-				);
+			if (action === "setup" || action.startsWith("setup ")) {
+				const profile = action === "setup" ? "global" : action.slice("setup ".length).trim();
+				const allowed = ["global", "academic", "architecture", "backend", "frontend", "security", "code-review"];
+				if (!allowed.includes(profile)) {
+					ctx.ui.notify(`未知 MCP profile: ${profile}。可用：${allowed.join(", ")}`, "warning");
+					return;
+				}
+				if (profile === "code-review") {
+					await runCliInPi(
+						pi,
+						ctx,
+						"code-review 集成",
+						["setup-code-review"],
+						"安装 code-review 集成",
+					"将下载 4 个固定 Skills（commit 6a1ee1c）并合并 code-review MCP profile（pinned wheel 2.3.7）。继续？",
+					);
+				} else {
+					await runCliInPi(
+						pi,
+						ctx,
+						`MCP profile ${profile}`,
+						["setup-mcp", profile],
+						`合并 MCP profile: ${profile}`,
+						`将 ${profile} 的 server 合并进 mcp.json（保留现有 server，--force 才覆盖）。继续？`,
+					);
+				}
 				return;
 			}
 
 			if (action === "deepseek" || action === "setup-deepseek") {
-				const cliPath = path.join(PACKAGE_ROOT, "scripts", "cli.mjs");
-				const setupCommand = `!node ${JSON.stringify(cliPath)} setup-deepseek`;
-				ctx.ui.setEditorText(setupCommand);
-				ctx.ui.notify(
-					`DeepSeek setup command copied to the editor: ${setupCommand}. Review it, then authenticate with /login or DEEPSEEK_API_KEY.`,
-					"info",
+				await runCliInPi(
+					pi,
+					ctx,
+					"DeepSeek Responses 配置",
+					["setup-deepseek"],
+					"配置 DeepSeek Responses API",
+					"将 deepseek-v4-flash 显式配置为 openai-responses（不安装/复制 API Key）。继续？",
 				);
 				return;
 			}
 
 			if (action === "graph" || action === "code-review" || action === "setup-code-review") {
-				const cliPath = path.join(PACKAGE_ROOT, "scripts", "cli.mjs");
-				const setupCommand = `!node ${JSON.stringify(cliPath)} setup-code-review`;
-				ctx.ui.setEditorText(setupCommand);
-				ctx.ui.notify(
-					`Code review graph setup command copied to the editor: ${setupCommand}. Review it before running; it downloads pinned MIT-licensed third-party code and enables a local stdio MCP server.`,
-					"info",
+				await runCliInPi(
+					pi,
+					ctx,
+					"code-review 集成",
+					["setup-code-review"],
+					"安装 code-review 集成",
+					"将下载 4 个固定 Skills（commit 6a1ee1c）并合并 code-review MCP profile（pinned wheel 2.3.7）。继续？",
 				);
 				return;
 			}
 
 			if (action !== "status") {
-				ctx.ui.notify("Usage: /kit [status|agents|doctor|setup|deepseek|graph]", "warning");
+				ctx.ui.notify("Usage: /kit [status|agents|doctor|setup [profile]|deepseek|graph]", "warning");
 				return;
 			}
 

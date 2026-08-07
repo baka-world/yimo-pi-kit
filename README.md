@@ -70,7 +70,7 @@ Then install the portable MCP profile from a checkout:
 node ./scripts/cli.mjs setup-mcp
 ```
 
-When the kit was installed through Pi and its package path is not obvious, run `/kit setup`; it prints copy-paste commands using the resolved package path.
+When the kit was installed through Pi and its package path is not obvious, run `/kit setup [profile]` inside Pi: in interactive mode it asks for confirmation and then runs the setup in Pi directly, reporting the result in a notification; outside interactive mode (or if you cancel) it copies the `!`-prefixed command to the editor instead.
 
 The setup command:
 
@@ -142,7 +142,7 @@ After installing `pi-mcp-adapter@2.15.0`, review and run:
 node ./scripts/cli.mjs setup-code-review
 ```
 
-Or run `/kit graph` to place the resolved command in Pi's editor as a runnable shell command (prefixed with `!`). Setup installs four upstream Skills from the audited `v2.3.7` commit through an isolated, atomically rebuilt Git checkout and merges a lazy local-stdio MCP profile whose primary PyPI wheel is pinned by URL and SHA-256. The setup resolves absolute local `uvx`, Python, Node, runner, and Git-shim paths; the wheel runs with no sdist builds, no project uv sources/config, and release-time dependency cutoffs. The curated server exposes graph construction plus read-oriented review/impact and local FTS/keyword search tools; it excludes upstream prompts/hooks/installers, HTTP, daemon/watch mode, embedding generation/cloud credentials, Wiki/cross-repository tools, source snippets, and automatic refactoring writes.
+Or run `/kit graph`: in interactive mode Pi confirms with you and runs the setup directly in Pi, reporting the result; it installs four upstream Skills from the audited `v2.3.7` commit through an isolated, atomically rebuilt Git checkout and merges a lazy local-stdio MCP profile whose primary PyPI wheel is pinned by URL and SHA-256. The setup resolves absolute local `uvx`, Python, Node, runner, and Git-shim paths; the wheel runs with no sdist builds, no project uv sources/config, and release-time dependency cutoffs. The curated server exposes graph construction plus read-oriented review/impact and local FTS/keyword search tools; it excludes upstream prompts/hooks/installers, HTTP, daemon/watch mode, embedding generation/cloud credentials, Wiki/cross-repository tools, source snippets, and automatic refactoring writes.
 
 After `/reload`, start with:
 

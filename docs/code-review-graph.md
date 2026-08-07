@@ -63,7 +63,7 @@ When the package path is not obvious, run:
 /kit graph
 ```
 
-Pi places the resolved setup command in the editor for review; it does not execute it automatically.
+In interactive mode Pi asks for confirmation and then runs the setup directly inside Pi, reporting the result; if you cancel (or in non-interactive modes) it copies the `!`-prefixed command to the editor instead.
 
 Restart Pi or run `/reload`, then check:
 
