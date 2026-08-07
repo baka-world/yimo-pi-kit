@@ -6,7 +6,7 @@ license: MIT
 
 # Frontend Engineering
 
-Combine this workflow with the installed `frontend-design`, `frontend-design-review`, `vercel-react-best-practices`, `vercel-composition-patterns`, and `webapp-testing` skills as appropriate.
+Combine this workflow with the installed `frontend-design`, `frontend-design-review`, `vercel-react-best-practices`, `vercel-composition-patterns`, `vercel-web-design-guidelines`, and `webapp-testing` skills as appropriate.
 
 ## Workflow
 

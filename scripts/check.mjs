@@ -2,6 +2,7 @@
 
 import { existsSync, lstatSync, readFileSync, readdirSync, statSync } from "node:fs";
 import path from "node:path";
+import YAML from "yaml";
 import { fileURLToPath } from "node:url";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -44,6 +45,17 @@ function frontmatter(relative) {
     return "";
   }
   return match[1];
+}
+
+function parseFrontmatter(relative) {
+  const text = frontmatter(relative);
+  if (!text) return null;
+  try {
+    return YAML.parse(text);
+  } catch (error) {
+    fail(`invalid YAML frontmatter in ${relative}: ${error instanceof Error ? error.message : String(error)}`);
+    return null;
+  }
 }
 
 walk(root);
@@ -139,6 +151,7 @@ const optionalSkillNames = new Set(Object.keys(sources?.skills ?? {}));
 
 for (const relative of checked.filter((file) => file.startsWith("agents/") && file.endsWith(".md"))) {
   const metadata = frontmatter(relative);
+  parseFrontmatter(relative);
   if (!/^name:\s*\S+/m.test(metadata)) fail(`agent missing name: ${relative}`);
   if (!/^description:\s*\S+/m.test(metadata)) fail(`agent missing description: ${relative}`);
 
@@ -165,6 +178,7 @@ for (const relative of checked.filter((file) => file.startsWith("agents/") && fi
 
 for (const relative of checked.filter((file) => file.endsWith("SKILL.md"))) {
   const metadata = frontmatter(relative);
+  parseFrontmatter(relative);
   if (!/^name:\s*\S+/m.test(metadata)) fail(`skill missing name: ${relative}`);
   if (!/^description:\s*[>|]?\s*\S+/m.test(metadata)) fail(`skill missing description: ${relative}`);
 }

@@ -1,6 +1,6 @@
 ---
 name: code-review-graph-usage
-description: Efficient source-code investigation using the local code-review graph. Use when inspecting or debugging unfamiliar code, locating definitions, or tracing call relationships, to keep context usage low. Triggers: 查源码, 源码调查, investigate source, find definition, trace call graph, 用图查代码.
+description: "Efficient source-code investigation using the local code-review graph. Use when inspecting or debugging unfamiliar code, locating definitions, or tracing call relationships, to keep context usage low. Triggers: 查源码, 源码调查, investigate source, find definition, trace call graph, 用图查代码."
 license: MIT
 ---
 
