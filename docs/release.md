@@ -45,14 +45,14 @@ Verify:
 
 ```bash
 git status --short
-git tag -s v0.3.1 -m "yimo-pi-kit v0.3.1"
+git tag -s v0.3.2 -m "yimo-pi-kit v0.3.2"
 git push origin main --tags
 ```
 
 Consumers install the tag:
 
 ```bash
-pi install git:github.com/baka-world/yimo-pi-kit@v0.3.1
+pi install git:github.com/baka-world/yimo-pi-kit@v0.3.2
 ```
 
 Pinned Git refs are not advanced by `pi update --extensions`; publish a new tag and update the install source explicitly.
@@ -69,7 +69,7 @@ If the account has two-factor authentication enabled, `npm publish` requires a o
 Consumers install:
 
 ```bash
-pi install npm:yimo-pi-kit@0.3.1
+pi install npm:yimo-pi-kit@0.3.2
 ```
 
 Use semantic versioning. Treat changes to agent behavior, tool permissions, automatic side effects, resource names, MCP servers, and required Pi APIs as release-significant.

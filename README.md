@@ -2,7 +2,7 @@
 
 A portable, opinionated profile for the [Pi coding agent](https://pi.dev). It packages reusable capabilities while deliberately excluding credentials, sessions, private endpoints, caches, downloaded data, and machine-specific binaries.
 
-> Status: `0.3.1`. Requires Pi `0.84.0` or newer and Node.js `22.19.0` or newer.
+> Status: `0.3.2`. Requires Pi `0.84.0` or newer and Node.js `22.19.0` or newer.
 
 ## Included
 
@@ -34,7 +34,7 @@ pi install /path/to/yimo-pi-kit
 ### Git release
 
 ```bash
-pi install git:github.com/baka-world/yimo-pi-kit@v0.3.1
+pi install git:github.com/baka-world/yimo-pi-kit@v0.3.2
 ```
 
 ### npm release
@@ -42,7 +42,7 @@ pi install git:github.com/baka-world/yimo-pi-kit@v0.3.1
 After the package is published:
 
 ```bash
-pi install npm:yimo-pi-kit@0.3.1
+pi install npm:yimo-pi-kit@0.3.2
 ```
 
 Restart Pi or run `/reload`, then check:
