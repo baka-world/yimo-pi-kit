@@ -15,7 +15,7 @@ npm pack --dry-run
 
 Inspect the tarball file list. It must not contain credentials, sessions, caches, local binaries, downloaded data, backups, generated Python bytecode, or absolute personal paths.
 
-Every push to `main` and every pull request also runs these gates automatically via GitHub Actions (`.github/workflows/ci.yml`): `npm run check`, a full `npm audit` (production and development dependencies), `npm pack --dry-run`, a Python syntax parse of `scripts/code-review-runner.py`, a Semgrep static-analysis pass over `scripts`, `extensions`, and `mcp`, and a Gitleaks secret scan. Dependabot (`.github/dependabot.yml`) files npm and GitHub Actions update PRs weekly. CI must be green before releasing.
+Every push to `main` and every pull request also runs these gates automatically via GitHub Actions: `npm run check`, a full `npm audit` (production and development dependencies), `npm pack --dry-run`, a Python syntax parse of `scripts/code-review-runner.py`, a Semgrep static-analysis pass over `scripts`, `extensions`, and `mcp`, and a Gitleaks secret scan (`.github/workflows/ci.yml`). GitHub CodeQL code scanning (`.github/workflows/codeql.yml`), PR dependency review (`.github/workflows/dependency-review.yml`), and per-job runner hardening via `step-security/harden-runner` are also enabled. Dependabot (`.github/dependabot.yml`) files npm and GitHub Actions update PRs weekly. CI must be green before releasing.
 
 ## 3. Test in isolation
 
