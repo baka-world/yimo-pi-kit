@@ -174,6 +174,15 @@ function parseSessionDigest(filePath: string, range: { start: Date; end: Date })
 
 // ─── LLM 压缩单个会话为一句描述 ────────────────────────────────────────────
 
+function compactHeaders(headers: Record<string, string | null> | undefined): Record<string, string> | undefined {
+  if (!headers) return undefined;
+  const output: Record<string, string> = {};
+  for (const [key, value] of Object.entries(headers)) {
+    if (value !== null) output[key] = value;
+  }
+  return output;
+}
+
 async function compressSession(
   digest: SessionDigest,
   model: any,
@@ -293,7 +302,7 @@ export default function (pi: ExtensionAPI) {
       for (let i = 0; i < digests.length; i++) {
         const d = digests[i];
         const summary = await compressSession(
-          d, model, auth.apiKey, auth.headers, auth.env, controller.signal
+          d, model, auth.apiKey, compactHeaders(auth.headers), auth.env, controller.signal
         );
         if (summary && summary.length >= 4) {
           summaries.push(`${summary}（${d.project}）`);

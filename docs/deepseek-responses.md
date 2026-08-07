@@ -76,7 +76,7 @@ Modes:
 For a single forced search without changing the process mode:
 
 ```text
-/deepseek-search latest release notes for Pi 0.83
+/deepseek-search latest release notes for Pi 0.84
 ```
 
 The one-shot command transforms into the query text and forces Web Search for only that provider request. Run it while the agent is idle; steer/follow-up use during an active stream is rejected so the flag cannot bind to the wrong request. It is cleared after use, model changes, cancellation, or agent settlement.

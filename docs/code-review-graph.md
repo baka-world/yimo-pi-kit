@@ -19,7 +19,7 @@ The MCP command runs through a private Node launcher and `uvx --isolated`. It ig
 
 ## Prerequisites
 
-- Pi `0.83.0` or newer;
+- Pi `0.84.0` or newer;
 - Node.js `22.19.0` or newer;
 - Python `3.10` or newer already available locally;
 - `uvx` from [uv](https://docs.astral.sh/uv/);
