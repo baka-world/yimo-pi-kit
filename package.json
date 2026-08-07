@@ -5,6 +5,14 @@
   "type": "module",
   "license": "MIT",
   "author": "yimo",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/baka-world/yimo-pi-kit.git"
+  },
+  "homepage": "https://github.com/baka-world/yimo-pi-kit",
+  "bugs": {
+    "url": "https://github.com/baka-world/yimo-pi-kit/issues"
+  },
   "keywords": [
     "pi-package",
     "pi",
