@@ -4,6 +4,7 @@ import * as fs from "node:fs";
 import * as path from "node:path";
 import { fileURLToPath } from "node:url";
 import type { ExtensionAPI, ExtensionCommandContext } from "@earendil-works/pi-coding-agent";
+import type { AutocompleteItem } from "@earendil-works/pi-tui";
 import { getAgentDir } from "@earendil-works/pi-coding-agent";
 import stripJsonComments from "strip-json-comments";
 import { discoverAgents } from "../subagent/agents.ts";
@@ -13,6 +14,33 @@ const PACKAGE_JSON_PATH = path.join(PACKAGE_ROOT, "package.json");
 const KIT_STATE_DIR = path.join(getAgentDir(), "state");
 const KIT_STATE_PATH = path.join(KIT_STATE_DIR, "yimo-pi-kit.json");
 const CODE_REVIEW_SKILLS = ["build-graph", "review-changes", "review-delta", "review-pr"];
+const MCP_PROFILES = ["global", "academic", "architecture", "backend", "frontend", "security", "code-review"];
+
+function kitArgumentCompletions(prefix: string): AutocompleteItem[] {
+	const actions: AutocompleteItem[] = [
+		{ value: "status", label: "status", description: "当前 kit 状态" },
+		{ value: "agents", label: "agents", description: "列出 agents" },
+		{ value: "doctor", label: "doctor", description: "运行环境与可选依赖检查" },
+		{ value: "setup", label: "setup", description: "MCP 安装向导（确认后 Pi 内执行）" },
+		{ value: "deepseek", label: "deepseek", description: "DeepSeek Responses 配置（确认后 Pi 内执行）" },
+		{ value: "graph", label: "graph", description: "code-review 集成安装（确认后 Pi 内执行）" },
+		{ value: "code-review", label: "code-review", description: "同 /kit graph" },
+	];
+	if (prefix === "setup" || /^setup\s*$/.test(prefix)) {
+		return MCP_PROFILES.map((profile) => ({
+			value: `setup ${profile}`,
+			label: `setup ${profile}`,
+			description: profile === "code-review" ? "code-review 集成（4 个固定 Skills + MCP）" : `合并 MCP profile ${profile}`,
+		}));
+	}
+	if (prefix.startsWith("setup ")) {
+		const rest = prefix.slice("setup ".length).trim();
+		return MCP_PROFILES.filter((profile) => profile.startsWith(rest))
+			.map((profile) => ({ value: `setup ${profile}`, label: `setup ${profile}`, description: `合并 MCP profile ${profile}` }));
+	}
+	const query = prefix.trim().toLowerCase();
+	return actions.filter((item) => !query || item.value.startsWith(query) || item.value.includes(query));
+}
 const CODE_REVIEW_TOOLS = [
 	"build_or_update_graph_tool",
 	"get_minimal_context_tool",
@@ -229,6 +257,7 @@ export default function (pi: ExtensionAPI) {
 	});
 	pi.registerCommand("kit", {
 		description: "yimo-pi-kit 状态与安装向导 (/kit [status|agents|doctor|setup [profile]|deepseek|graph]；setup/deepseek/graph 会在 Pi 内确认后直接执行)",
+		getArgumentCompletions: (prefix) => kitArgumentCompletions(prefix ?? ""),
 		handler: async (args, ctx) => {
 			const action = args.trim().toLowerCase() || "status";
 			const metadata = readPackageMetadata();
