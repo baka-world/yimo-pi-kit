@@ -79,6 +79,22 @@ The setup command:
 - preserves existing values unless `--force` is supplied;
 - writes mode `0600` on Unix where possible.
 
+### Profiles are opt-in
+
+MCP servers are grouped into **profiles**, and nothing is enabled until you explicitly merge a profile with `setup-mcp <profile>` (default `global`). Only the servers in the profiles you merged appear in `mcp.json` and in `/mcp` — running only `setup-code-review`, for example, enables just `code-review-graph`.
+
+| Profile | Servers | Enable with |
+|---|---|---|
+| `global` | Context7, Playwright, OpenAlex, arXiv, Semgrep, Zotero | `setup-mcp global` (default) |
+| `academic` | arXiv, OpenAlex, Zotero | `setup-mcp academic` |
+| `architecture` | Context7 | `setup-mcp architecture` |
+| `backend` | Context7, Semgrep | `setup-mcp backend` |
+| `frontend` | Context7, Playwright | `setup-mcp frontend` |
+| `security` | Context7, Semgrep | `setup-mcp security` |
+| `code-review` | code-review-graph | `setup-code-review` |
+
+Merges are additive and preserve existing servers (including unrelated servers you configured yourself); use `--force` to replace a matching definition. `code-review-graph` is intentionally **not** part of `global` and is added only by the explicit code-review setup.
+
 Requirements by server:
 
 | Server | Runtime | Notes |
@@ -91,7 +107,7 @@ Requirements by server:
 | Zotero | `uvx` | Local mode; Zotero must expose its local API |
 | code-review-graph | `uvx`, Python 3.10+ | Separate opt-in profile; local SQLite graph and curated review-only tools |
 
-All supplied MCP servers are lazy. Zotero write/mutation tools are excluded by default. code-review-graph is not part of the default global profile.
+All supplied MCP servers are lazy. Zotero write/mutation tools are excluded by default. See the profile table above for which servers each profile enables.
 
 ## DeepSeek V4 Flash Responses API and Web Search
 
