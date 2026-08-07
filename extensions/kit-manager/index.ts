@@ -229,7 +229,7 @@ export default function (pi: ExtensionAPI) {
 
 			if (action === "setup") {
 				const cliPath = path.join(PACKAGE_ROOT, "scripts", "cli.mjs");
-				const setupCommand = `node ${JSON.stringify(cliPath)} setup-mcp`;
+				const setupCommand = `!node ${JSON.stringify(cliPath)} setup-mcp`;
 				ctx.ui.setEditorText(setupCommand);
 				ctx.ui.notify(
 					`Setup command copied to the editor: ${setupCommand}. Install parent MCP first with pi install npm:pi-mcp-adapter@2.15.0.`,
@@ -240,7 +240,7 @@ export default function (pi: ExtensionAPI) {
 
 			if (action === "deepseek" || action === "setup-deepseek") {
 				const cliPath = path.join(PACKAGE_ROOT, "scripts", "cli.mjs");
-				const setupCommand = `node ${JSON.stringify(cliPath)} setup-deepseek`;
+				const setupCommand = `!node ${JSON.stringify(cliPath)} setup-deepseek`;
 				ctx.ui.setEditorText(setupCommand);
 				ctx.ui.notify(
 					`DeepSeek setup command copied to the editor: ${setupCommand}. Review it, then authenticate with /login or DEEPSEEK_API_KEY.`,
@@ -251,7 +251,7 @@ export default function (pi: ExtensionAPI) {
 
 			if (action === "graph" || action === "code-review" || action === "setup-code-review") {
 				const cliPath = path.join(PACKAGE_ROOT, "scripts", "cli.mjs");
-				const setupCommand = `node ${JSON.stringify(cliPath)} setup-code-review`;
+				const setupCommand = `!node ${JSON.stringify(cliPath)} setup-code-review`;
 				ctx.ui.setEditorText(setupCommand);
 				ctx.ui.notify(
 					`Code review graph setup command copied to the editor: ${setupCommand}. Review it before running; it downloads pinned MIT-licensed third-party code and enables a local stdio MCP server.`,

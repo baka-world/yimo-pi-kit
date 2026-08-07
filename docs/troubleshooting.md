@@ -78,7 +78,7 @@ echo $PATH                # 是否包含 /mnt/c/... 的 Windows 路径
 
 **修复**（推荐按顺序）：
 
-1. 在 Pi 里运行 `/kit graph`——它会把解析好的完整 setup 命令放进编辑器，直接审查后运行；
+1. 在 Pi 里运行 `/kit graph`——它会把解析好的完整 setup 命令放进编辑器（已带 `!` 前缀，可直接回车执行）；
 2. 或直接调用：
    ```bash
    node ~/.pi/agent/npm/node_modules/yimo-pi-kit/scripts/cli.mjs setup-code-review
