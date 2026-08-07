@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { lstatSync, readFileSync, readdirSync, statSync } from "node:fs";
+import { existsSync, lstatSync, readFileSync, readdirSync, statSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -344,6 +344,53 @@ else {
   }
 }
 
+/**
+ * Manifest resource lists must be explicit, sorted, and complete.
+ *
+ * pi resolves a directory entry (e.g. "./skills") with readdirSync in
+ * filesystem order, which is not guaranteed stable across runs/machines.
+ * The system prompt is assembled from these resources, so any reordering on
+ * /reload changes the prompt prefix and invalidates provider-side prompt
+ * caches. Explicit sorted file lists keep the resolved order deterministic.
+ */
+function checkDeterministicResourceLists() {
+  const pkg = parseJson("package.json");
+  if (!pkg?.pi) return;
+  const matchers = {
+    skills: /^skills\/[^/]+\/SKILL\.md$/,
+    prompts: /^prompts\/[^/]+\.md$/,
+    themes: /^themes\/[^/]+\.json$/,
+  };
+  for (const [resourceType, matcher] of Object.entries(matchers)) {
+    const base = path.join(root, resourceType);
+    const discovered = [];
+    if (existsSync(base)) {
+      const walkDir = (dir) => {
+        for (const entry of readdirSync(dir, { withFileTypes: true })) {
+          if (entry.name.startsWith(".") || entry.name === "node_modules") continue;
+          const full = path.join(dir, entry.name);
+          if (entry.isDirectory()) walkDir(full);
+          else discovered.push(path.relative(root, full).split(path.sep).join("/"));
+        }
+      };
+      walkDir(base);
+    }
+    const expected = discovered.filter((f) => matcher.test(f)).sort();
+    const declared = (pkg.pi[resourceType] ?? []).map((p) => p.replace(/^\.\//, "")).sort();
+    for (const f of expected) {
+      if (!declared.includes(f)) {
+        fail(`pi.${resourceType} must list ${f} explicitly (directory scan order is non-deterministic)`);
+      }
+    }
+    for (const f of declared) {
+      if (!expected.includes(f)) fail(`pi.${resourceType} lists ${f} which is missing or out of scope`);
+    }
+    if (JSON.stringify(declared) !== JSON.stringify([...declared].sort())) {
+      fail(`pi.${resourceType} entries must be sorted alphabetically for deterministic prompt prefixes`);
+    }
+  }
+}
+
 const codeReviewRunner = readFileSync(path.join(root, "scripts", "code-review-runner.py"), "utf8");
 for (const marker of [
   "LOCKED_ROOT = _find_locked_root()",
@@ -367,6 +414,8 @@ if (process.platform !== "win32") {
     if ((statSync(path.join(root, script)).mode & 0o111) === 0) fail(`script is not executable: ${script}`);
   }
 }
+
+checkDeterministicResourceLists();
 
 if (errors.length > 0) {
   console.error(`Validation failed with ${errors.length} issue(s):`);

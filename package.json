@@ -1,6 +1,6 @@
 {
   "name": "yimo-pi-kit",
-  "version": "0.3.4",
+  "version": "0.4.0",
   "description": "A portable Pi coding-agent profile with extensions, subagents, skills, prompts, themes, DeepSeek Responses Web Search, and optional local code-review graph/MCP integration.",
   "type": "module",
   "license": "MIT",
@@ -101,13 +101,24 @@
       "./extensions/better-custom/index.ts"
     ],
     "skills": [
-      "./skills"
+      "./skills/academic-research-tooling/SKILL.md",
+      "./skills/backend-engineering/SKILL.md",
+      "./skills/code-review-graph-usage/SKILL.md",
+      "./skills/frontend-engineering/SKILL.md",
+      "./skills/public-dataset-research-sop/SKILL.md",
+      "./skills/security-engineering/SKILL.md",
+      "./skills/software-architecture/SKILL.md"
     ],
     "prompts": [
-      "./prompts"
+      "./prompts/implement-and-review.md",
+      "./prompts/implement.md",
+      "./prompts/scout-and-plan.md"
     ],
     "themes": [
-      "./themes"
+      "./themes/catppuccin-frappe.json",
+      "./themes/catppuccin-latte.json",
+      "./themes/catppuccin-macchiato.json",
+      "./themes/catppuccin-mocha.json"
     ]
   }
 }

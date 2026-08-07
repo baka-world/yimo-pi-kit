@@ -154,7 +154,7 @@ pi install npm:yimo-pi-kit@0.3.3
 build_or_update_graph_tool(full_rebuild=True)
 ```
 
-或删除 `.code-review-graph/` 目录后重新构建。正常建库后应有数百节点/数千边（取决于仓库规模），metadata 中 `last_build_type` 为 `full`。
+或删除该仓库在 `$PI_CODING_AGENT_DIR/cache/yimo-pi-kit/code-review-graph/graph-data/` 下的子目录后重新构建。正常建库后应有数百节点/数千边（取决于仓库规模），metadata 中 `last_build_type` 为 `full`。
 
 ## 10. 切换主题后界面不变（用户消息/工具块仍是旧配色）
 

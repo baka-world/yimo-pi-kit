@@ -100,15 +100,21 @@ For a branch or pull-request style review:
 /skill:review-pr
 ```
 
-The first graph build parses tracked source files and creates:
+The first graph build parses tracked source files and stores per-repository data
+outside the source tree, under the private Pi runtime cache:
 
 ```text
-<repository>/.code-review-graph/graph.db
+$PI_CODING_AGENT_DIR/cache/yimo-pi-kit/code-review-graph/graph-data/<repo-name>-<hash>/graph.db
 ```
 
-The first build is a full parse; later runs update incrementally. Do not rely on an incremental update against a never-built or empty graph: it only re-parses recently changed tracked files, and changed Markdown/configuration files yield zero code nodes. If `list_graph_stats_tool` reports zero files/nodes after building, rerun `build_or_update_graph_tool(full_rebuild=True)`, or delete `.code-review-graph/` and rebuild, before treating the graph as usable.
+The per-repository subdirectory is derived from the locked Git root, so each
+repository gets its own graph and no tool argument can redirect the data to
+another project or arbitrary path. No `.code-review-graph/` directory is created
+inside the repository; the source tree stays free of generated runtime state.
 
-The generated directory is created privately where the platform supports Unix modes and contains an inner `.gitignore` to reduce the chance of committing the database. Symlinked/non-directory graph storage and symlinked, hard-linked, or non-regular database sidecars are rejected; existing graph files are tightened to private Unix modes. The database can contain absolute paths, hashes, symbols, and source-structure metadata; treat it as local project data and do not publish it without review.
+The first build is a full parse; later runs update incrementally. Do not rely on an incremental update against a never-built or empty graph: it only re-parses recently changed tracked files, and changed Markdown/configuration files yield zero code nodes. If `list_graph_stats_tool` reports zero files/nodes after building, rerun `build_or_update_graph_tool(full_rebuild=True)`, or delete the repository's `graph-data` subdirectory under `$PI_CODING_AGENT_DIR/cache/yimo-pi-kit/code-review-graph/graph-data/` and rebuild, before treating the graph as usable.
+
+The generated directory lives outside the repository and is created privately where the platform supports Unix modes; it carries a `.yimo-pi-kit-repo` marker recording the owning repository. Symlinked/non-directory graph storage and symlinked, hard-linked, or non-regular database sidecars are rejected; existing graph files are tightened to private Unix modes. The database can contain absolute paths, hashes, symbols, and source-structure metadata; treat it as local project data and do not publish it without review.
 
 ## Curated MCP surface
 
@@ -168,10 +174,12 @@ code-review-graph watch
 
 Pins must be updated as one release pair: inspect the new source/tag, PyPI wheel hash, dependencies, tool names, Skills, license and network behavior before changing either the MCP package or Git commit.
 
-To disable the server, remove only the `code-review-graph` entry from your local `mcp.json` or disable it through your MCP configuration. Remove the four installed Skill links/directories if no longer wanted. The optional runtime home, launcher, uv cache, FastMCP/XDG state, Git config and shims live under `$PI_CODING_AGENT_DIR/cache/yimo-pi-kit/code-review-graph/` and may grow to hundreds of megabytes. Generated repository data can be deleted separately:
+To disable the server, remove only the `code-review-graph` entry from your local `mcp.json` or disable it through your MCP configuration. Remove the four installed Skill links/directories if no longer wanted. The optional runtime home, launcher, uv cache, FastMCP/XDG state, Git config and shims live under `$PI_CODING_AGENT_DIR/cache/yimo-pi-kit/code-review-graph/` and may grow to hundreds of megabytes. Generated per-repository graph data can be deleted separately without touching the source tree:
 
 ```bash
-rm -rf .code-review-graph
+rm -rf "$PI_CODING_AGENT_DIR/cache/yimo-pi-kit/code-review-graph/graph-data"
 ```
+
+A legacy in-repository `.code-review-graph/` from an older kit version is no longer used; remove it with `rm -rf .code-review-graph`.
 
 Review paths before deletion. The kit does not automatically remove user data or modify repository-level files during rollback.

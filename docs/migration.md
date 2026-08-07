@@ -35,7 +35,7 @@ Keep team-specific agents in `.pi/agents` only when repository control and proje
 | API keys and OAuth credentials | No | `/login`, env, OS credential store |
 | Sessions and reports | No by default | Review/redact individually |
 | Trust decisions, hint state, and caches | No | Recreate locally |
-| `.code-review-graph/graph.db` and exports | No by default | Rebuild locally; may contain absolute paths and source metadata |
+| Per-repository graph data (`$PI_CODING_AGENT_DIR/cache/yimo-pi-kit/code-review-graph/graph-data/`) and exports | No by default | Rebuild locally; may contain absolute paths and source metadata |
 | Downloaded papers/Zotero data | No by default | User-owned local storage |
 
 ## Private overlay pattern

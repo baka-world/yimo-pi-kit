@@ -310,6 +310,7 @@ function prepareCodeReviewRuntime() {
   const localAppData = path.join(runtimeRoot, "local-appdata");
   const shimDirectory = path.join(runtimeRoot, "bin");
   const hooksDirectory = path.join(runtimeRoot, "disabled-git-hooks");
+  const graphDataDirectory = path.join(runtimeRoot, "graph-data");
   ensurePrivateDirectory(runtimeHome);
   ensurePrivateDirectory(uvCache);
   ensurePrivateDirectory(xdgCache);
@@ -321,6 +322,7 @@ function prepareCodeReviewRuntime() {
   ensurePrivateDirectory(localAppData);
   ensurePrivateDirectory(shimDirectory);
   ensurePrivateDirectory(hooksDirectory);
+  ensurePrivateDirectory(graphDataDirectory);
 
   const realGitCommand = resolveCommandPath("git");
   const realUvxCommand = resolveCommandPath("uvx");
@@ -532,7 +534,7 @@ function matchesManagedCodeReviewServer(server) {
 function isPinnedCodeReviewServer(server) {
   if (!matchesManagedCodeReviewServer(server)) return false;
   const runtimeRoot = path.join(agentDir(), "cache", "yimo-pi-kit", "code-review-graph");
-  const directories = ["home", "uv", "xdg-cache", "xdg-config", "xdg-data", "fastmcp-home", "tmp", "appdata", "local-appdata", "bin", "disabled-git-hooks"];
+  const directories = ["home", "uv", "xdg-cache", "xdg-config", "xdg-data", "fastmcp-home", "tmp", "appdata", "local-appdata", "bin", "disabled-git-hooks", "graph-data"];
   const files = [
     "fastmcp.env", "isolated-gitconfig", "isolated-gitattributes",
     "bin/git-shim.mjs", "bin/svn-shim.mjs", "bin/uvx-launcher.mjs",
@@ -723,7 +725,7 @@ function setupCodeReview(args) {
 
   if (mcpResult.pinnedCodeReview) {
     console.log("Code review graph setup complete. Run /reload, then use /skill:build-graph or /skill:review-delta.");
-    console.log("The first graph build creates a local .code-review-graph/ directory in the repository.");
+    console.log("Graph data is stored per repository under the private Pi runtime cache, never inside the source tree.");
   } else {
     console.log("Workflow skills were installed, but the existing custom MCP definition remains active. Review it or re-run setup-code-review with --force.");
   }
