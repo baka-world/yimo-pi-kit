@@ -118,3 +118,20 @@ nvm use 22
 **原因**：可选集成尚未启用，这是**正常状态**，不是故障。
 
 **修复**：按 README 的 [Local code-review graph](code-review-graph.md) 章节，审查后运行 `setup-code-review`。自定义 MCP 定义会被原样保留，`--force` 才会覆盖。
+
+## 8. 想让 kit 自动更新（不固定版本）
+
+Pi 默认把带版本号的 npm 包（如 `npm:yimo-pi-kit@0.3.1`）当作**固定引用**，`pi update --extensions` 会跳过它；升级必须显式 `pi install npm:yimo-pi-kit@<新版本>`。
+
+想要自动更新，去掉版本号改成浮动引用：
+
+```bash
+pi install npm:yimo-pi-kit      # settings 变为 "npm:yimo-pi-kit"，并立即装到最新版
+pi update --extensions          # 之后自动拉最新版
+```
+
+**代价**：不再固定版本，未来任何新版本（含未经你审阅的）都会被自动安装。回到固定版本随时可以：
+
+```bash
+pi install npm:yimo-pi-kit@0.3.1
+```
