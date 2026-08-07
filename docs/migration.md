@@ -17,7 +17,7 @@
 For project-local installation:
 
 ```bash
-pi install -l git:github.com/baka-world/yimo-pi-kit@v0.3.0
+pi install -l git:github.com/baka-world/yimo-pi-kit@v0.3.1
 ```
 
 Commit `.pi/settings.json`. Team members must trust the project before Pi loads project packages or extensions. Pin releases for reproducibility.
