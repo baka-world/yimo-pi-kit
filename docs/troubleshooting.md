@@ -155,3 +155,33 @@ build_or_update_graph_tool(full_rebuild=True)
 ```
 
 或删除 `.code-review-graph/` 目录后重新构建。正常建库后应有数百节点/数千边（取决于仓库规模），metadata 中 `last_build_type` 为 `full`。
+
+## 10. 切换主题后界面不变（用户消息/工具块仍是旧配色）
+
+**原因**：运行中的 Pi 启动时只读取一次 `settings.json` 的 `theme` 配置；`/settings` 切换主题或热重载在**长会话**中可能因渲染缓存不生效。内置 dark/light 与自定义 catppuccin 主题在干净环境下均已验证可正常切换，问题多见于长时间运行的会话（重启即恢复）。
+
+**确认**：`/settings` 切到另一主题后，用户消息块背景色没变；但 `~/.pi/agent/settings.json` 的 `"theme"` 已更新、界面却没刷新。
+
+**修复**：**重启 Pi**（一定生效）。
+
+| 操作 | 效果 |
+|------|------|
+| 改 `settings.json` 后不重启 | ❌ 无效（运行中的 Pi 不重读 settings.json） |
+| `/settings` 切换主题 | ⚠️ 正常情况下即时生效；长会话中可能不生效 |
+| 热重载（编辑当前主题 JSON 文件） | ✅ 生效（watcher 触发重绘） |
+| 切换后界面不变 | ✅ **重启 Pi** |
+
+**要点**：
+
+- 热重载只对"编辑当前主题的 JSON 文件内容"生效，对"切换主题名"无效。
+- 不推荐改 node_modules 打补丁（pi 升级会被覆盖）。
+
+**Catppuccin 明暗对照**：4 款中只有 **latte 是浅色**，frappe / macchiato / mocha 是深色。浅色主题下用户消息背景接近白色属正常（`userMessageBg` 近白），shell 命令块本身设计为无背景。
+
+**排查终端背景色**：
+
+```bash
+printf '\033[48;2;255;0;0m\033[30m 红色背景测试 \033[0m\n'
+```
+
+若不显示红色背景，是终端不渲染 SGR 背景色，与主题无关。
