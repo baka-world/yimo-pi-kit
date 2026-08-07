@@ -8,18 +8,21 @@ license: MIT
 
 ## When this applies
 
-Use this skill when investigating source code (definitions, call relationships, impact radius, recent changes) — especially in large repositories or when context usage matters. It only applies when the `code-review-graph` MCP tools are available (after `setup-code-review` + `build-graph`).
+Use this skill when investigating source code (definitions, call relationships, impact radius, recent changes) — especially in large repositories or when context usage matters. The code-review-graph MCP tools must be installed (`setup-code-review`); if the graph itself is not yet built for the current repo, build it first (see below) — do not skip the graph because it is absent.
 
 ## Workflow Rules (token efficiency)
 
-1. **Prefer the graph over full-file dumps.** Use code-review-graph MCP tools first:
+1. **The graph is the primary path for source investigation.** Use code-review-graph MCP tools first:
    - `query_graph_tool` — find nodes/definitions/symbols
    - `semantic_search_nodes_tool` — locate code by meaning
    - `get_minimal_context_tool` — fetch only the relevant functions/definitions
    - `get_impact_radius_tool` — trace callers/dependents
-2. **Read source files in slices, not whole files.** Use `grep -n` / `sed -n <range>` to locate and read only the needed lines. Do NOT `cat` entire files into context.
-3. **Only build the graph when it helps.** If the graph is not built for the current repo, prefer targeted `grep`/`sed` reads over a full `build-graph` unless the repo is large or the investigation is deep.
-4. If a source location is not in the graph, fall back to `grep -n` for the symbol, then `sed -n` the surrounding lines.
+2. **No graph yet? Build it — do not give up and fall back to grep.** If the graph is missing, empty, or stale for the current repo, generate it as part of the investigation before proceeding:
+   - `build_or_update_graph_tool(full_rebuild=True)` for a first build / empty graph
+   - or `/skill:build-graph` in the interactive TUI
+   - For a stale graph, run an incremental update first; only do a full rebuild when incremental results stay empty.
+3. **After the graph is available, use it for every source lookup.** Reserve `grep -n` / `sed -n <range>` for locating files/lines that the graph does not cover (e.g., config, markdown, generated code) — never as a substitute for the graph when the graph exists. Do NOT `cat` entire files into context.
+4. If a source location is genuinely not in the graph after a build, fall back to `grep -n` for the symbol, then `sed -n` the surrounding lines.
 
 ## Check whether the graph is ready
 
