@@ -106,6 +106,8 @@ The first graph build parses tracked source files and creates:
 <repository>/.code-review-graph/graph.db
 ```
 
+The first build is a full parse; later runs update incrementally. Do not rely on an incremental update against a never-built or empty graph: it only re-parses recently changed tracked files, and changed Markdown/configuration files yield zero code nodes. If `list_graph_stats_tool` reports zero files/nodes after building, rerun `build_or_update_graph_tool(full_rebuild=True)`, or delete `.code-review-graph/` and rebuild, before treating the graph as usable.
+
 The generated directory is created privately where the platform supports Unix modes and contains an inner `.gitignore` to reduce the chance of committing the database. Symlinked/non-directory graph storage and symlinked, hard-linked, or non-regular database sidecars are rejected; existing graph files are tightened to private Unix modes. The database can contain absolute paths, hashes, symbols, and source-structure metadata; treat it as local project data and do not publish it without review.
 
 ## Curated MCP surface

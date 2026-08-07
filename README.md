@@ -151,6 +151,8 @@ After `/reload`, start with:
 /skill:review-delta
 ```
 
+The very first build must be a **full build** (`build_or_update_graph_tool(full_rebuild=True)`). An incremental update against a never-built or empty graph only re-parses recently changed tracked files, and changed Markdown/configuration files produce no code nodes—so you can end up with an empty `graph.db` even after the skill appears to succeed. If `list_graph_stats_tool` reports zero nodes/files after building, rerun with `full_rebuild=True` (or delete `.code-review-graph/` and rebuild).
+
 The server must start inside a Git repository and is locked to that repository for its lifetime; `repo_root`, changed-file paths, symlinks, and graph-data paths cannot escape it. The first build creates `.code-review-graph/graph.db` with private local permissions; symlinked or hard-linked graph files are refused. Treat it as generated project data. The curated profile isolates Git config and blocks external diff/textconv plus clean/process filters; SVN access is intentionally disabled. The launcher also terminates its uvx process group when Pi or MCP stdio closes. The upstream Skills sometimes mention automatic hooks, but this profile installs no hooks—run the build/update workflow explicitly. The dedicated uv cache can grow to hundreds of megabytes. See [Local code-review graph](docs/code-review-graph.md) for pins, data flow, security boundaries, workflows and rollback.
 
 ## Optional third-party skills

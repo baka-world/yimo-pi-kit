@@ -135,3 +135,23 @@ pi update --extensions          # 之后自动拉最新版
 ```bash
 pi install npm:yimo-pi-kit@0.3.1
 ```
+
+## 9. 运行 build-graph 后 graph 是空的（0 节点 / 0 边）
+
+**原因**：增量更新只重新解析最近变更的**受跟踪文件**，而首次建图后若只改动过 Markdown/配置文件（它们不产生代码节点），或者对从未全量构建过的空库直接跑增量更新，`graph.db` 就会保持为空。metadata 里 `last_build_type` 会是 `incremental`，`list_graph_stats_tool` 报告 0 files / 0 nodes。
+
+**确认**：
+
+```text
+/skill:build-graph 之后 → /kit graph 或用 MCP 工具 list_graph_stats_tool
+```
+
+若显示 `Files: 0, Total nodes: 0`，就是没有做过全量构建。
+
+**修复**（首次或空库必须全量重建）：
+
+```text
+build_or_update_graph_tool(full_rebuild=True)
+```
+
+或删除 `.code-review-graph/` 目录后重新构建。正常建库后应有数百节点/数千边（取决于仓库规模），metadata 中 `last_build_type` 为 `full`。
