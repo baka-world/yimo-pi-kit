@@ -222,6 +222,7 @@ See:
 - [Migration guide](docs/migration.md)
 - [DeepSeek Responses and Web Search](docs/deepseek-responses.md)
 - [Local code-review graph](docs/code-review-graph.md)
+- [Troubleshooting / FAQ](docs/troubleshooting.md)
 - [Release guide](docs/release.md)
 - [Security policy](SECURITY.md)
 - [Third-party notices](THIRD_PARTY_NOTICES.md)
