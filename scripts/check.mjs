@@ -125,6 +125,28 @@ if (packageJson) {
   if (!packageJson.pi?.extensions?.includes("./extensions/deepseek-web-search.ts")) {
     fail("DeepSeek Web Search extension is missing from the Pi manifest");
   }
+
+  // Reverse validation: every bundled resource must be registered in the Pi manifest.
+  const extensionEntries = checked
+    .filter(
+      (file) =>
+        file.startsWith("extensions/") &&
+        (file.endsWith("/index.ts") || (file.endsWith(".ts") && !file.slice("extensions/".length).includes("/"))),
+    )
+    .map((file) => `./${file}`);
+  for (const resource of extensionEntries) {
+    if (!packageJson.pi?.extensions?.includes(resource)) fail(`unregistered Pi extension: ${resource}`);
+  }
+  for (const [kind, pattern] of [
+    ["skills", /^skills\/[^/]+\/SKILL\.md$/],
+    ["prompts", /^prompts\/[^/]+\.md$/],
+    ["themes", /^themes\/[^/]+\.json$/],
+  ]) {
+    for (const relative of checked.filter((file) => pattern.test(file))) {
+      const resource = `./${relative}`;
+      if (!packageJson.pi?.[kind]?.includes(resource)) fail(`unregistered Pi ${kind.slice(0, -1)}: ${resource}`);
+    }
+  }
 }
 
 for (const relative of checked.filter((file) => file.endsWith(".json"))) parseJson(relative);

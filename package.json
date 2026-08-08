@@ -1,6 +1,6 @@
 {
   "name": "yimo-pi-kit",
-  "version": "0.4.5",
+  "version": "0.4.6",
   "description": "A portable Pi coding-agent profile with extensions, subagents, skills, prompts, themes, DeepSeek Responses Web Search, and optional local code-review graph/MCP integration.",
   "type": "module",
   "license": "MIT",
@@ -97,6 +97,7 @@
       "./extensions/summarize/index.ts",
       "./extensions/task-notifier/index.ts",
       "./extensions/todo/index.ts",
+      "./extensions/token-speed/index.ts",
       "./extensions/worklog.ts",
       "./extensions/better-custom/index.ts"
     ],

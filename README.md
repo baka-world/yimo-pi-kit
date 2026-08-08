@@ -2,7 +2,7 @@
 
 A portable, opinionated profile for the [Pi coding agent](https://pi.dev). It packages reusable capabilities while deliberately excluding credentials, sessions, private endpoints, caches, downloaded data, and machine-specific binaries.
 
-> Status: `0.4.5`. Requires Pi `0.84.0` or newer and Node.js `22.19.0` or newer.
+> Status: `0.4.6`. Requires Pi `0.84.0` or newer and Node.js `22.19.0` or newer.
 
 ## Included
 
