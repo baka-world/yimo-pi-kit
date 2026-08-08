@@ -1,21 +1,22 @@
 /**
  * Token Speed Extension — 当前对话 tokens 与实时生成速度 (tokens/s)
  *
- * 显示在输入框上方的 widget 行（不占用 footer 左下角，不替换 pi 内置 footer）：
+ * 自定义 footer（复刻 pi 默认 footer 的全部内容），token-speed 显示在
+ * **右下角**（最右端，模型名右侧）：
  *
- *   流式时:  ⚡ 42.3 t/s · 本条 ↓2.1k     ← 实时速率（accent 高亮）
- *   空闲时:  ∑ ↑123.4k ↓45.6k            ← 当前对话累计 tokens（精确 usage）
+ *   流式时:  ... deepseek-v4-flash · ⚡ 42.3 t/s ↓2.1k   ← 实时速率（accent）
+ *   空闲时:  ... deepseek-v4-flash · ∑ ↑123.5k ↓2.3k   ← 累计 tokens（dim）
  *
  * 实现要点:
  *   - 实时速度: 监听 message_update 流式 delta（text/thinking/toolcall），
  *     用 chars/4 启发式估算 token 数（与 Pi 内置 estimateTokens 一致），
  *     以 3 秒滑动窗口计算 tokens/s，流式期间每 500ms 刷新一次
  *   - 累计 tokens: 从 session 分支条目汇总 assistant usage（权威值）
- *   - 空闲时保留最近一次速率，便于回看本条消息的生成速度
- *   - 始终可见：空会话也显示 ∑ ↑0 ↓0，重启后立即可见
+ *   - 空闲时保留最近一次速率；空会话显示 ∑ ↑0 ↓0，始终可见
  */
 
 import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-agent";
+import { truncateToWidth, visibleWidth } from "@earendil-works/pi-tui";
 import type { AssistantMessage } from "@earendil-works/pi-ai";
 
 // 与 pi 内置 estimateTokens 的启发式一致（chars/4，偏保守）
@@ -24,18 +25,27 @@ const CHARS_PER_TOKEN = 4;
 const WINDOW_MS = 3000;
 // 流式期间的刷新间隔
 const TICK_MS = 500;
-// widget 显示位置：输入框上方
-const WIDGET_KEY = "token-speed";
 
 interface DeltaSample {
   t: number;
   chars: number;
 }
 
-function fmtTokens(n: number): string {
-  if (n < 1000) return `${n}`;
-  if (n < 1_000_000) return `${(n / 1000).toFixed(1)}k`;
-  return `${(n / 1_000_000).toFixed(2)}M`;
+/** 与 pi 默认 footer 一致的紧凑 token 格式化 */
+function fmtTokens(count: number): string {
+  if (count < 1000) return count.toString();
+  if (count < 10000) return `${(count / 1000).toFixed(1)}k`;
+  if (count < 1000000) return `${Math.round(count / 1000)}k`;
+  if (count < 10000000) return `${(count / 1000000).toFixed(1)}M`;
+  return `${Math.round(count / 1000000)}M`;
+}
+
+/** 与 pi 默认 footer 一致：home 目录缩写为 ~ */
+function fmtCwd(cwd: string, home: string): string {
+  if (!home) return cwd;
+  const rel = cwd.startsWith(home) ? cwd.slice(home.length) : cwd;
+  if (rel === cwd) return cwd;
+  return rel === "" ? "~" : `~${rel}`;
 }
 
 export default function (pi: ExtensionAPI) {
@@ -57,8 +67,8 @@ export default function (pi: ExtensionAPI) {
     return chars / CHARS_PER_TOKEN / span;
   }
 
-  /** 计算空闲态显示行 */
-  function totalsLine(): string {
+  /** 当前对话累计 tokens（精确 usage） */
+  function totals(): { input: number; output: number } {
     let input = 0;
     let output = 0;
     if (lastCtx) {
@@ -70,20 +80,20 @@ export default function (pi: ExtensionAPI) {
         }
       }
     }
-    const parts: string[] = [];
-    if (lastRate > 0) parts.push(`⚡ ${lastRate.toFixed(1)} t/s`);
-    parts.push(`∑ ↑${fmtTokens(input)} ↓${fmtTokens(output)}`);
-    return parts.join(" · ");
+    return { input, output };
   }
 
-  /** 计算流式态显示行 */
-  function streamingLine(now: number): string {
-    const rate = currentRate(now);
-    if (rate > 0) lastRate = rate;
-    return `⚡ ${rate.toFixed(1)} t/s · 本条 ↓${fmtTokens(Math.round(msgChars / CHARS_PER_TOKEN))}`;
+  /** token-speed 文本（模型行下方，右对齐）；空闲无速率时返回 null（不占行） */
+  function tokenSpeedText(now: number): string | null {
+    if (streaming) {
+      const rate = currentRate(now);
+      if (rate > 0) lastRate = rate;
+      return `⚡ ${rate.toFixed(1)} t/s · 本条 ↓${fmtTokens(Math.round(msgChars / CHARS_PER_TOKEN))}`;
+    }
+    if (lastRate > 0) return `⚡ ${lastRate.toFixed(1)} t/s`;
+    return null;
   }
 
-  /** 触发 TUI 重绘（widget render 会读取最新状态） */
   function refresh() {
     tuiRef?.requestRender();
   }
@@ -117,6 +127,103 @@ export default function (pi: ExtensionAPI) {
     refresh();
   }
 
+  // ── footer 渲染（复刻 pi 默认 footer + 右下角 token-speed）──
+
+  function renderFooter(width: number, theme: any, footerData: any): string[] {
+    const ctx = lastCtx;
+    const state = ctx?.model;
+
+    // 1. pwd 行：cwd (branch) • session
+    const cwd = ctx?.sessionManager.getCwd() ?? ctx?.cwd ?? process.cwd();
+    let pwd = fmtCwd(cwd, process.env.HOME || process.env.USERPROFILE || "");
+    const branch = footerData.getGitBranch();
+    if (branch) pwd = `${pwd} (${branch})`;
+    const sessionName = ctx?.sessionManager.getSessionName?.();
+    if (sessionName) pwd = `${pwd} • ${sessionName}`;
+
+    // 2. 统计：↑↓R/W/CH%/$/context%
+    const usageTotals = totals();
+    const statsParts: string[] = [];
+    if (usageTotals.input) statsParts.push(`↑${fmtTokens(usageTotals.input)}`);
+    if (usageTotals.output) statsParts.push(`↓${fmtTokens(usageTotals.output)}`);
+    if (!streaming) {
+      // 流式中 usage 未定稿，跳过缓存/成本细节，聚焦速度
+      const contextUsage = ctx?.getContextUsage();
+      const contextWindow = contextUsage?.contextWindow ?? state?.contextWindow ?? 0;
+      const contextPercent = contextUsage?.percent;
+      const contextStr =
+        contextPercent === undefined || contextPercent === null
+          ? `?/${fmtTokens(contextWindow)}`
+          : `${contextPercent.toFixed(1)}%/${fmtTokens(contextWindow)}`;
+      if (contextPercent !== undefined && contextPercent !== null) {
+        statsParts.push(
+          contextPercent > 90 ? theme.fg("error", contextStr) : contextPercent > 70 ? theme.fg("warning", contextStr) : contextStr,
+        );
+      } else if (contextWindow > 0) {
+        statsParts.push(contextStr);
+      }
+    }
+    const statsLeft = statsParts.join(" ");
+
+    // 3. 右侧：模型名（token-speed 独立一行，放在模型行下方）
+    let modelStr = state?.id || "no-model";
+    if (state?.reasoning) {
+      const level = ctx?.thinkingLevel || "off";
+      modelStr = level === "off" ? `${modelStr} • thinking off` : `${modelStr} • ${level}`;
+    }
+    const providerCount = footerData.getAvailableProviderCount();
+    if (providerCount > 1 && state) {
+      modelStr = `(${state.provider}) ${modelStr}`;
+    }
+
+    // 布局：statsLeft ... modelStr（pi 默认布局）
+    const minPadding = 2;
+    const leftWidth = visibleWidth(statsLeft);
+    const rightWidth = visibleWidth(modelStr);
+    const totalNeeded = leftWidth + minPadding + rightWidth;
+    let statsLine;
+    if (totalNeeded <= width) {
+      const padding = " ".repeat(width - leftWidth - rightWidth);
+      statsLine = statsLeft + padding + modelStr;
+    } else {
+      const availableForRight = width - leftWidth - minPadding;
+      if (availableForRight > 0) {
+        const truncatedRight = truncateToWidth(modelStr, availableForRight, "");
+        const truncatedRightWidth = visibleWidth(truncatedRight);
+        const padding = " ".repeat(Math.max(0, width - leftWidth - truncatedRightWidth));
+        statsLine = statsLeft + padding + truncatedRight;
+      } else {
+        statsLine = statsLeft;
+      }
+    }
+
+    // 4. token-speed 独立行：模型行下方，右对齐（只有速度，tokens 统计左侧已有）
+    const tokenStr = tokenSpeedText(Date.now());
+    const lines = [
+      truncateToWidth(theme.fg("dim", pwd), width, theme.fg("dim", "...")),
+      theme.fg("dim", statsLine),
+    ];
+    if (tokenStr !== null) {
+      const tokenStyled = streaming
+        ? theme.fg("accent", tokenStr)
+        : theme.fg("dim", tokenStr);
+      const tokenWidth = visibleWidth(tokenStyled);
+      lines.push(
+        tokenWidth >= width
+          ? tokenStyled
+          : " ".repeat(width - tokenWidth) + tokenStyled,
+      );
+    }
+    const extensionStatuses: Map<string, string> = footerData.getExtensionStatuses();
+    if (extensionStatuses.size > 0) {
+      const sorted = Array.from(extensionStatuses.entries())
+        .sort((a, b) => a[0].localeCompare(b[0]))
+        .map(([, text]) => text.replace(/[\r\n\t]/g, " ").replace(/ +/g, " ").trim());
+      lines.push(truncateToWidth(sorted.join(" "), width, theme.fg("dim", "...")));
+    }
+    return lines;
+  }
+
   // ── 事件 ──
 
   pi.on("session_start", (_event, ctx) => {
@@ -126,26 +233,18 @@ export default function (pi: ExtensionAPI) {
     msgChars = 0;
     lastRate = 0;
     stopTick();
-    // 注册 widget（输入框上方），始终可见
-    ctx.ui.setWidget(
-      WIDGET_KEY,
-      (tui, theme) => {
-        tuiRef = tui;
-        return {
-          render: () => [
-            streaming
-              ? theme.fg("accent", streamingLine(Date.now()))
-              : theme.fg("dim", totalsLine()),
-          ],
-          invalidate: () => {},
-          dispose: () => {
-            tuiRef = undefined;
-          },
-        };
-      },
-      { placement: "aboveEditor" },
-    );
-    refresh();
+    // 隐藏 pi 内置 working loader（输入框上方的 ⠋ Working...），
+    // 避免与 footer 速度行重复；compaction/retry 等指示器不受影响
+    ctx.ui.setWorkingIndicator({ frames: [] });
+    ctx.ui.setFooter((tui, theme, footerData) => {
+      tuiRef = tui;
+      const unsub = footerData.onBranchChange(() => tui.requestRender());
+      return {
+        dispose: unsub,
+        invalidate() {},
+        render: (width: number) => renderFooter(width, theme, footerData),
+      };
+    });
   });
 
   pi.on("message_start", (event, ctx) => {
