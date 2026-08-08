@@ -78,7 +78,7 @@ export default function (pi: ExtensionAPI) {
     }
   }
 
-  /** 空闲状态：显示当前对话累计 tokens（精确 usage）+ 最近一次速率 */
+  /** 空闲状态：始终显示当前对话累计 tokens（精确 usage）+ 最近一次速率，保证扩展可见 */
   function showTotals(ctx: ExtensionContext) {
     let input = 0;
     let output = 0;
@@ -88,10 +88,6 @@ export default function (pi: ExtensionAPI) {
         input += usage?.input ?? 0;
         output += usage?.output ?? 0;
       }
-    }
-    if (input === 0 && output === 0 && lastRate === 0) {
-      ctx.ui.setStatus("token-speed", undefined);
-      return;
     }
     const parts: string[] = [];
     if (lastRate > 0) parts.push(`⚡ ${lastRate.toFixed(1)} t/s`);
@@ -122,6 +118,10 @@ export default function (pi: ExtensionAPI) {
     window = [];
     streaming = true;
     startTick();
+    ctx.ui.setStatus(
+      "token-speed",
+      ctx.ui.theme?.fg("accent", `⚡ 0.0 t/s · 本条 ↓0`) ?? `⚡ 0.0 t/s · 本条 ↓0`,
+    );
   });
 
   pi.on("message_update", (event, ctx) => {
